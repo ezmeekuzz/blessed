@@ -4,16 +4,20 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class UsersModel extends Model
+class ClipArtsModel extends Model
 {
-    protected $table            = 'users';
-    protected $primaryKey       = 'user_id';
+    protected $table            = 'clip_arts';
+    protected $primaryKey       = 'clip_art_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
+    protected $useSoftDeletes   = true;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'firstname', 'lastname', 'emailaddress', 'password', 'encryptpass', 'usertype', 'email_verified', 'verification_token', 'token_expiry', 'status'
+        'title', 
+        'image_url', 
+        'tags', 
+        'description', 
+        'is_active',
     ];
 
     protected bool $allowEmptyInserts = false;

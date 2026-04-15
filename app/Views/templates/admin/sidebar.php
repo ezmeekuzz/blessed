@@ -91,20 +91,23 @@
             </li>
 
             <!-- Design Elements (Optional) -->
-            <li <?php if(in_array($activeMenu, ['clipart', 'backgrounds', 'stickers'])) echo 'class="active"'; ?>>
+            <li <?php if(in_array($activeMenu, ['addclipart', 'clipartmasterlist', 'addsticker', 'stickermasterlist'])) echo 'class="active"'; ?>>
                 <a class="has-arrow" href="javascript:void(0)">
                     <i class="nav-icon fas fa-shapes"></i>
                     <span class="nav-title">Design Elements</span>
                 </a>
                 <ul>
-                    <li <?php if($activeMenu == 'clipart') echo 'class="active"'; ?>>
-                        <a href='/admin/clipart'>Clip Art & Icons</a>
+                    <li <?php if($activeMenu == 'addclipart') echo 'class="active"'; ?>>
+                        <a href='/admin/add-clipart'>Add Clip Art</a>
                     </li>
-                    <li <?php if($activeMenu == 'backgrounds') echo 'class="active"'; ?>>
-                        <a href='/admin/backgrounds'>Backgrounds</a>
+                    <li <?php if($activeMenu == 'clipartmasterlist') echo 'class="active"'; ?>>
+                        <a href='/admin/clipart-masterlist'>Clip Art Masterlist</a>
                     </li>
-                    <li <?php if($activeMenu == 'stickers') echo 'class="active"'; ?>>
-                        <a href='/admin/stickers'>Stickers & Decals</a>
+                    <li <?php if($activeMenu == 'addsticker') echo 'class="active"'; ?>>
+                        <a href='/admin/add-sticker'>Add Sticker</a>
+                    </li>
+                    <li <?php if($activeMenu == 'stickermasterlist') echo 'class="active"'; ?>>
+                        <a href='/admin/sticker-masterlist'>Sticker Masterlist</a>
                     </li>
                 </ul>
             </li>
@@ -134,17 +137,17 @@
 
             <li class="nav-static-title">CUSTOMERS</li>
             <!-- Users -->
-            <li <?php if(in_array($activeMenu, ['adduser', 'usermasterlist'])) echo 'class="active"'; ?>>
+            <li <?php if(in_array($activeMenu, ['addcustomer', 'customermasterlist'])) echo 'class="active"'; ?>>
                 <a class="has-arrow" href="javascript:void(0)">
                     <i class="nav-icon fas fa-users"></i>
                     <span class="nav-title">Customers</span>
                 </a>
                 <ul>
-                    <li <?php if($activeMenu == 'adduser') echo 'class="active"'; ?>>
-                        <a href='/admin/add-user'>Add Customer</a>
+                    <li <?php if($activeMenu == 'addcustomer') echo 'class="active"'; ?>>
+                        <a href='/admin/add-customer'>Add Customer</a>
                     </li>
-                    <li <?php if($activeMenu == 'usermasterlist') echo 'class="active"'; ?>>
-                        <a href='/admin/user-masterlist'>Customer List</a>
+                    <li <?php if($activeMenu == 'customermasterlist') echo 'class="active"'; ?>>
+                        <a href='/admin/customer-masterlist'>Customer List</a>
                     </li>
                 </ul>
             </li>

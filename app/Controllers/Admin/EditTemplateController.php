@@ -7,18 +7,18 @@ use App\Models\GridTemplatesModel;
 
 class EditTemplateController extends SessionController
 {
-    public function index($id)
+    public function index($id = null)
     {
         // Check if user is logged in
         if (!$this->session->get('AdminLoggedIn')) {
             return redirect()->to('/admin/login');
         }
         
-        $templatesModel = new GridTemplatesModel();
-        $template = $templatesModel->find($id);
+        $gridTemplatesModel = new GridTemplatesModel();
+        $template = $gridTemplatesModel->find($id);
         
         if (!$template) {
-            return redirect()->to('/admin/templates-masterlist')->with('error', 'Template not found.');
+            return redirect()->to('/admin/templates-masterlist')->with('error', 'Template not found');
         }
         
         $data = [
@@ -30,17 +30,9 @@ class EditTemplateController extends SessionController
         return view('pages/admin/edit-template', $data);
     }
     
-    public function update($id)
+    public function update($id = null)
     {
-        // Check if user is logged in
-        if (!$this->session->get('AdminLoggedIn')) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ]);
-        }
-        
-        // Check if it's an AJAX request
+        // Check if this is an AJAX request
         if (!$this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => false,
@@ -48,14 +40,14 @@ class EditTemplateController extends SessionController
             ]);
         }
         
-        $templatesModel = new GridTemplatesModel();
+        $gridTemplatesModel = new GridTemplatesModel();
         
-        // Find existing template
-        $existingTemplate = $templatesModel->find($id);
+        // Check if template exists
+        $existingTemplate = $gridTemplatesModel->find($id);
         if (!$existingTemplate) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Template not found'
+                'message' => 'Template not found.'
             ]);
         }
         
@@ -80,25 +72,33 @@ class EditTemplateController extends SessionController
         
         // Validate JSON format
         $layoutJson = $this->request->getPost('layout_json');
-        if (!json_decode($layoutJson)) {
+        $decodedJson = json_decode($layoutJson);
+        if (!$decodedJson) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Invalid JSON format for layout.'
             ]);
         }
         
+        // Validate layout structure
+        if (!isset($decodedJson->rows) || !is_array($decodedJson->rows)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid layout structure. Must contain "rows" array.'
+            ]);
+        }
+        
         // Prepare data
         $data = [
             'name' => $this->request->getPost('name'),
-            'layout_json' => $layoutJson,
-            'is_featured' => $this->request->getPost('is_featured') ? 1 : 0
+            'layout_json' => $layoutJson
         ];
         
         // Update database
-        if ($templatesModel->update($id, $data)) {
+        if ($gridTemplatesModel->update($id, $data)) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Template updated successfully!',
+                'message' => 'Grid template updated successfully!',
                 'redirect' => base_url('admin/templates-masterlist')
             ]);
         }
@@ -106,6 +106,47 @@ class EditTemplateController extends SessionController
         return $this->response->setJSON([
             'success' => false,
             'message' => 'Failed to update template. Please try again.'
+        ]);
+    }
+    
+    /**
+     * Get template data for AJAX preview
+     */
+    public function getTemplateData($id = null)
+    {
+        // Check if user is logged in
+        if (!$this->session->get('AdminLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ]);
+        }
+        
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request'
+            ]);
+        }
+        
+        $gridTemplatesModel = new GridTemplatesModel();
+        $template = $gridTemplatesModel->find($id);
+        
+        if (!$template) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Template not found'
+            ]);
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'grid_template_id' => $template['grid_template_id'],
+                'name' => $template['name'],
+                'layout_json' => $template['layout_json'],
+                'is_featured' => $template['is_featured'] ?? 0
+            ]
         ]);
     }
 }

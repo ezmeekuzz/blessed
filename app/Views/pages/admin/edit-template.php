@@ -6,67 +6,9 @@
         background: #f8f9fa;
         border-radius: 12px;
         padding: 20px;
-        min-height: 500px;
-        border: 2px solid #dee2e6;
+        min-height: 400px;
+        border: 2px dashed #dee2e6;
         transition: all 0.3s ease;
-    }
-    
-    /* Drop Zones - Visible Areas */
-    .drop-zone {
-        background: rgba(61, 32, 78, 0.08);
-        border: 2px dashed #3D204E;
-        border-radius: 12px;
-        margin: 10px 0;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .drop-zone.active {
-        background: rgba(61, 32, 78, 0.2);
-        border-color: #5a2e72;
-        transform: scale(1.02);
-    }
-    
-    .drop-zone .drop-label {
-        color: #3D204E;
-        font-size: 14px;
-        font-weight: 600;
-        background: white;
-        display: inline-block;
-        padding: 6px 16px;
-        border-radius: 25px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .drop-zone.active .drop-label {
-        background: #3D204E;
-        color: white;
-    }
-    
-    /* Row Drop Zone */
-    .row-drop-zone {
-        background: rgba(102, 126, 234, 0.1);
-        border: 2px dashed #667eea;
-        border-radius: 12px;
-        margin: 5px 0;
-        padding: 15px;
-        text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .row-drop-zone.active {
-        background: rgba(102, 126, 234, 0.25);
-        border-color: #764ba2;
-        transform: scale(1.01);
-    }
-    
-    .row-drop-zone .drop-label {
-        color: #667eea;
-        font-size: 13px;
-        font-weight: 500;
     }
     
     /* Layout Rows */
@@ -78,19 +20,16 @@
         border: 1px solid #e9ecef;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         position: relative;
-        transition: all 0.3s ease;
     }
     
     .layout-row.dragging {
-        opacity: 0.4;
+        opacity: 0.5;
         background: #e9ecef;
-        transform: scale(0.98);
     }
     
     .layout-row.drag-over {
         background: #e8f0fe;
         border: 2px solid #3D204E;
-        transform: scale(1.01);
     }
     
     /* Layout Cells */
@@ -107,22 +46,15 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        cursor: grab;
-    }
-    
-    .layout-cell:active {
-        cursor: grabbing;
     }
     
     .layout-cell.dragging {
         opacity: 0.5;
-        transform: scale(0.95);
     }
     
     .layout-cell.drag-over {
         transform: scale(1.02);
-        box-shadow: 0 0 0 3px rgba(102,126,234,0.5);
-        background: linear-gradient(135deg, #764ba2 0%, #3D204E 100%);
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.4);
     }
     
     .remove-cell {
@@ -166,53 +98,113 @@
     }
     
     .drag-handle {
-        cursor: grab;
+        cursor: move;
         padding: 5px 8px;
         background: #f8f9fa;
         border-radius: 4px;
         margin-left: 5px;
-        display: inline-block;
-    }
-    
-    .drag-handle:active {
-        cursor: grabbing;
     }
     
     .drag-handle:hover {
         background: #e9ecef;
     }
     
+    /* Preset Cards */
+    .preset-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    
+    .preset-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    
+    .preset-card.selected {
+        border-color: #3D204E;
+        background: linear-gradient(135deg, #f8f0ff 0%, #f0e8ff 100%);
+    }
+    
+    .preset-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        padding: 15px;
+        color: white;
+        margin-bottom: 8px;
+    }
+    
+    .preset-preview .row {
+        margin: 0 -2px;
+    }
+    
+    .preset-preview .col {
+        background: rgba(255,255,255,0.2);
+        border-radius: 6px;
+        padding: 8px 2px;
+        margin: 0 2px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .preset-card small {
+        font-size: 12px;
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .preset-card.selected small {
+        color: #3D204E;
+        font-weight: 600;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        color: #c9b6d4;
+        margin-bottom: 20px;
+    }
+    
+    /* JSON Editor */
     .json-error {
         border-color: #dc3545 !important;
         background: #fff8f8 !important;
     }
     
-    .drag-instruction {
-        background: #e8f0fe;
-        border-left: 4px solid #667eea;
-        padding: 12px 15px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-    }
-    
+    /* Loading Spinner */
     .loading-overlay {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        right: 0;
+        bottom: 0;
         background: rgba(0,0,0,0.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
         z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    .loading-spinner {
-        background: white;
-        padding: 20px;
-        border-radius: 16px;
-        text-align: center;
+    /* Info Alert */
+    .info-alert {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .info-alert i {
+        color: #2196f3;
+        margin-right: 10px;
     }
 </style>
 
@@ -233,7 +225,7 @@
                                         <a href="/"><i class="ti ti-home"></i></a>
                                     </li>
                                     <li class="breadcrumb-item">
-                                        Grid Templates
+                                        <a href="/admin/templates-masterlist">Grid Templates</a>
                                     </li>
                                     <li class="breadcrumb-item active">
                                         Edit Template
@@ -248,7 +240,7 @@
             <!-- Template Form -->
             <form id="editTemplateForm">
                 <?= csrf_field() ?>
-                <input type="hidden" name="grid_template_id" id="templateId" value="<?= $template['grid_template_id'] ?>">
+                <input type="hidden" name="template_id" id="templateId" value="<?= $template['grid_template_id'] ?? '' ?>">
                 
                 <div class="row">
                     <!-- Left Column - Template Builder -->
@@ -265,23 +257,12 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <!-- Drag Instruction -->
-                                <div class="drag-instruction">
-                                    <i class="fas fa-arrows-alt"></i>
-                                    <strong>Drag & Drop Areas:</strong>
-                                    <small class="d-block mt-1">
-                                        • <i class="fas fa-grip-vertical"></i> <strong>Drag rows</strong> using the handle (⋮⋮) - drop zones appear between rows<br>
-                                        • <i class="fas fa-columns"></i> <strong>Drag columns</strong> directly - drop zones highlight on other columns
-                                    </small>
-                                </div>
-                                
                                 <!-- Grid Preview Area -->
                                 <div class="grid-preview" id="gridPreview">
-                                    <div class="text-center py-5">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="sr-only">Loading...</span>
-                                        </div>
-                                        <p class="mt-2">Loading template...</p>
+                                    <div class="empty-state">
+                                        <i class="fas fa-th-large"></i>
+                                        <h5>Loading template...</h5>
+                                        <p class="text-muted">Please wait while we load your template</p>
                                     </div>
                                 </div>
                                 
@@ -324,23 +305,96 @@
                             <div class="card-body">
                                 <div class="form-group">
                                     <label for="templateName">Template Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" id="templateName" class="form-control" value="<?= esc($template['name']) ?>" placeholder="e.g., 3-Column Grid, Product Gallery" required>
+                                    <input type="text" name="name" id="templateName" class="form-control" placeholder="e.g., 3-Column Grid, Product Gallery" value="<?= htmlspecialchars($template['name'] ?? '') ?>" required>
+                                </div>
+                                
+                                <div class="info-alert">
+                                    <i class="fas fa-info-circle"></i>
+                                    <small>Edit your template layout using the visual builder on the left, or modify the JSON directly.</small>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Settings Card -->
+                        <!-- Presets Card -->
                         <div class="card shadow-sm mb-3">
                             <div class="card-header bg-white">
-                                <h5 class="card-title mb-0"><i class="fas fa-cog"></i> Settings</h5>
+                                <h5 class="card-title mb-0"><i class="fas fa-star"></i> Quick Presets</h5>
                             </div>
                             <div class="card-body">
-                                <div class="form-group">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="isFeatured" name="is_featured" value="1" <?= ($template['is_featured'] ?? 0) == 1 ? 'checked' : '' ?>>
-                                        <label class="custom-control-label" for="isFeatured">Feature this template</label>
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="3-col">
+                                            <div class="preset-preview">
+                                                <div class="row">
+                                                    <div class="col-4">1</div>
+                                                    <div class="col-4">2</div>
+                                                    <div class="col-4">3</div>
+                                                </div>
+                                            </div>
+                                            <small>3 Columns</small>
+                                        </div>
                                     </div>
-                                    <small class="form-text text-muted">Featured templates appear on the homepage.</small>
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="2-col">
+                                            <div class="preset-preview">
+                                                <div class="row">
+                                                    <div class="col-6">1</div>
+                                                    <div class="col-6">2</div>
+                                                </div>
+                                            </div>
+                                            <small>2 Columns</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="4-col">
+                                            <div class="preset-preview">
+                                                <div class="row">
+                                                    <div class="col-3">1</div>
+                                                    <div class="col-3">2</div>
+                                                    <div class="col-3">3</div>
+                                                    <div class="col-3">4</div>
+                                                </div>
+                                            </div>
+                                            <small>4 Columns</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="hero">
+                                            <div class="preset-preview">
+                                                <div class="row mb-1">
+                                                    <div class="col-12">Hero</div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-6">1</div>
+                                                    <div class="col-6">2</div>
+                                                </div>
+                                            </div>
+                                            <small>Hero + 2 Columns</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="sidebar">
+                                            <div class="preset-preview">
+                                                <div class="row">
+                                                    <div class="col-8">Main</div>
+                                                    <div class="col-4">Side</div>
+                                                </div>
+                                            </div>
+                                            <small>Main + Sidebar</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <div class="preset-card text-center" data-preset="gallery">
+                                            <div class="preset-preview">
+                                                <div class="row">
+                                                    <div class="col-6">Big</div>
+                                                    <div class="col-3">1</div>
+                                                    <div class="col-3">2</div>
+                                                </div>
+                                            </div>
+                                            <small>Gallery Layout</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -356,7 +410,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <textarea name="layout_json" id="layoutJson" rows="8" class="form-control font-monospace" style="font-family: monospace; font-size: 12px;" placeholder='{"rows": [{"columns": 3, "height": 120}]}'></textarea>
+                                <textarea name="layout_json" id="layoutJson" rows="8" class="form-control font-monospace" style="font-family: monospace; font-size: 12px;" placeholder='{"rows": [{"columns": 3, "height": 120}]}'><?= htmlspecialchars($template['layout_json'] ?? '') ?></textarea>
                                 <small class="text-muted mt-2 d-block">Edit JSON directly or use the visual builder</small>
                             </div>
                         </div>
@@ -364,9 +418,6 @@
                         <!-- Action Buttons -->
                         <div class="card shadow-sm">
                             <div class="card-body">
-                                <button type="button" class="btn btn-outline-secondary btn-block mb-2" id="resetFormBtn">
-                                    <i class="fas fa-undo-alt"></i> Reset Changes
-                                </button>
                                 <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                                     <i class="fas fa-save"></i> Update Template
                                 </button>
@@ -379,14 +430,6 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p class="mt-2 mb-0">Saving template...</p>
     </div>
 </div>
 

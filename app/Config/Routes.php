@@ -120,4 +120,76 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($rout
 $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
     $routes->get('edit-template/(:num)', 'EditTemplateController::index/$1');
     $routes->post('edit-template/update/(:num)', 'EditTemplateController::update/$1');
+    $routes->get('edit-template/getTemplateData/(:num)', 'EditTemplateController::getTemplateData/$1');
+});
+// Add Clipart and Icons Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('add-clipart', 'AddClipArtController::index');
+    $routes->post('add-clipart/store', 'AddClipArtController::store');
+});
+
+// Clipart Masterlist Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('clipart-masterlist', 'ClipArtMasterlistController::index');
+    $routes->post('clipartmasterlist/getData', 'ClipArtMasterlistController::getData');
+    $routes->post('clipartmasterlist/getTrashData', 'ClipArtMasterlistController::getTrashData');
+    $routes->get('clipartmasterlist/getTrashCount', 'ClipArtMasterlistController::getTrashCount'); // New route
+    $routes->get('clipartmasterlist/getClipArt/(:num)', 'ClipArtMasterlistController::getClipArt/$1');
+    $routes->post('clipartmasterlist/toggleStatus/(:num)', 'ClipArtMasterlistController::toggleStatus/$1');
+    $routes->delete('clipartmasterlist/softDelete/(:num)', 'ClipArtMasterlistController::softDelete/$1');
+    $routes->post('clipartmasterlist/restore/(:num)', 'ClipArtMasterlistController::restore/$1');
+    $routes->delete('clipartmasterlist/forceDelete/(:num)', 'ClipArtMasterlistController::forceDelete/$1');
+});
+
+// Edit Clipart Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('edit-clipart/(:num)', 'EditClipArtController::index/$1');
+    $routes->post('edit-clipart/update/(:num)', 'EditClipArtController::update/$1');
+});
+// Add Sticker Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('add-sticker', 'AddStickerController::index');
+    $routes->post('add-sticker/store', 'AddStickerController::store');
+});
+// Sticker Masterlist Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('sticker-masterlist', 'StickerMasterlistController::index');
+    $routes->post('stickermasterlist/getData', 'StickerMasterlistController::getData');
+    $routes->post('stickermasterlist/getTrashData', 'StickerMasterlistController::getTrashData');
+    $routes->get('stickermasterlist/getTrashCount', 'StickerMasterlistController::getTrashCount');
+    $routes->get('stickermasterlist/getSticker/(:num)', 'StickerMasterlistController::getSticker/$1');
+    $routes->post('stickermasterlist/toggleStatus/(:num)', 'StickerMasterlistController::toggleStatus/$1');
+    $routes->delete('stickermasterlist/softDelete/(:num)', 'StickerMasterlistController::softDelete/$1');
+    $routes->post('stickermasterlist/restore/(:num)', 'StickerMasterlistController::restore/$1');
+    $routes->delete('stickermasterlist/forceDelete/(:num)', 'StickerMasterlistController::forceDelete/$1');
+    
+    $routes->get('edit-sticker/(:num)', 'EditStickerController::index/$1');
+    $routes->post('edit-sticker/update/(:num)', 'EditStickerController::update/$1');
+});
+// Edit Sticker Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('edit-sticker/(:num)', 'EditStickerController::index/$1');
+    $routes->post('edit-sticker/update/(:num)', 'EditStickerController::update/$1');
+});
+
+//Add Customer Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('add-customer', 'AddCustomerController::index');
+    $routes->post('add-customer/store', 'AddCustomerController::store');
+});
+
+//Customer Masterlist Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('customer-masterlist', 'CustomerMasterlistController::index');
+    $routes->post('customermasterlist/getData', 'CustomerMasterlistController::getData');
+    $routes->get('customermasterlist/getCustomer/(:num)', 'CustomerMasterlistController::getCustomer/$1');
+    $routes->post('customermasterlist/toggleStatus/(:num)', 'CustomerMasterlistController::toggleStatus/$1');
+    $routes->post('customermasterlist/toggleEmailVerification/(:num)', 'CustomerMasterlistController::toggleEmailVerification/$1');
+    $routes->delete('customermasterlist/delete/(:num)', 'CustomerMasterlistController::delete/$1');
+});
+
+//Edit Customer Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('edit-customer/(:num)', 'EditCustomerController::index/$1');
+    $routes->post('edit-customer/update/(:num)', 'EditCustomerController::update/$1');
 });
