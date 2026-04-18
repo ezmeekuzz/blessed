@@ -193,3 +193,51 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($rout
     $routes->get('edit-customer/(:num)', 'EditCustomerController::index/$1');
     $routes->post('edit-customer/update/(:num)', 'EditCustomerController::update/$1');
 });
+
+// Newsletter Subscribers Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('subscribers-masterlist', 'SubscribersMasterlistController::index');
+    $routes->post('subscribersmasterlist/getData', 'SubscribersMasterlistController::getData');
+    $routes->get('subscribersmasterlist/getSubscriber/(:num)', 'SubscribersMasterlistController::getSubscriber/$1');
+    $routes->post('subscribersmasterlist/updateStatus/(:num)', 'SubscribersMasterlistController::updateStatus/$1');
+    $routes->delete('subscribersmasterlist/delete/(:num)', 'SubscribersMasterlistController::delete/$1');
+    $routes->get('subscribersmasterlist/export', 'SubscribersMasterlistController::export');
+});
+
+// Contact Messages Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('messages', 'MessagesController::index');
+    $routes->post('messages/getData', 'MessagesController::getData');
+    $routes->get('messages/getMessage/(:num)', 'MessagesController::getMessage/$1');
+    $routes->post('messages/reply/(:num)', 'MessagesController::reply/$1');
+    $routes->delete('messages/delete/(:num)', 'MessagesController::delete/$1');
+    $routes->post('messages/bulkMarkRead', 'MessagesController::bulkMarkRead');
+    $routes->post('messages/bulkDelete', 'MessagesController::bulkDelete');
+});
+
+// Send Newsletter Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('send-newsletter', 'SendNewsletterController::index');
+    $routes->get('send-newsletter/stats', 'SendNewsletterController::getStats');
+    $routes->get('send-newsletter/subscribers', 'SendNewsletterController::getSubscribers');
+    $routes->post('send-newsletter/recipient-count', 'SendNewsletterController::getRecipientCount');
+    $routes->post('send-newsletter/send', 'SendNewsletterController::send');
+    $routes->post('send-newsletter/saveDraft', 'SendNewsletterController::saveDraft');
+    $routes->get('send-newsletter/getCampaign/(:num)', 'SendNewsletterController::getCampaign/$1');
+    $routes->get('send-newsletter/campaigns', 'SendNewsletterController::getCampaigns');
+    $routes->post('send-newsletter/cancel/(:num)', 'SendNewsletterController::cancel/$1');
+    $routes->delete('send-newsletter/delete/(:num)', 'SendNewsletterController::delete/$1');
+});
+
+// Email Templates Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('email-templates', 'EmailTemplatesController::index');
+    $routes->get('email-templates/list', 'EmailTemplatesController::getList');
+    $routes->get('email-templates/get/(:num)', 'EmailTemplatesController::getTemplate/$1');
+    $routes->post('email-templates/save', 'EmailTemplatesController::save');
+    $routes->delete('email-templates/delete/(:num)', 'EmailTemplatesController::delete/$1');
+    $routes->post('email-templates/toggleStatus/(:num)', 'EmailTemplatesController::toggleStatus/$1');
+    $routes->post('email-templates/duplicate/(:num)', 'EmailTemplatesController::duplicate/$1');
+    $routes->get('email-templates/stats', 'EmailTemplatesController::getStats');
+    $routes->post('email-templates/incrementUsage/(:num)', 'EmailTemplatesController::incrementUsage/$1');
+});
