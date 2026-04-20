@@ -1,6 +1,4 @@
 <?php
-// File: app/Controllers/Admin/EmailTemplatesController.php
-// Email Templates Controller - FIXED STATS
 
 namespace App\Controllers\Admin;
 
@@ -15,6 +13,7 @@ class EmailTemplatesController extends SessionController
     
     public function __construct()
     {
+        //parent::__construct();
         $this->db = \Config\Database::connect();
         $this->emailTemplatesModel = new EmailTemplatesModel();
     }
@@ -109,21 +108,34 @@ class EmailTemplatesController extends SessionController
             'is_active' => $isActive,
         ];
         
-        if ($templateId) {
+        if ($templateId && !empty($templateId)) {
             // Update existing template
-            $this->emailTemplatesModel->update($templateId, $data);
-            $message = 'Template updated successfully';
+            if ($this->emailTemplatesModel->update($templateId, $data)) {
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'message' => 'Template updated successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to update template'
+                ]);
+            }
         } else {
             // Create new template
             $data['used_count'] = 0;
-            $this->emailTemplatesModel->insert($data);
-            $message = 'Template created successfully';
+            if ($this->emailTemplatesModel->insert($data)) {
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'message' => 'Template created successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to create template'
+                ]);
+            }
         }
-        
-        return $this->response->setJSON([
-            'status' => 'success',
-            'message' => $message
-        ]);
     }
     
     /**
@@ -202,16 +214,21 @@ class EmailTemplatesController extends SessionController
             'used_count' => 0,
         ];
         
-        $this->emailTemplatesModel->insert($newData);
+        if ($this->emailTemplatesModel->insert($newData)) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Template duplicated successfully'
+            ]);
+        }
         
         return $this->response->setJSON([
-            'status' => 'success',
-            'message' => 'Template duplicated successfully'
+            'status' => 'error',
+            'message' => 'Failed to duplicate template'
         ]);
     }
     
     /**
-     * Get statistics - FIXED
+     * Get statistics - FULLY FIXED
      */
     public function getStats()
     {
@@ -228,11 +245,8 @@ class EmailTemplatesController extends SessionController
                 ->where('is_active', 1)
                 ->countAllResults();
             
-            // Unique categories - using query builder directly
-            $categories = $this->db->table('email_templates')
-                ->select('DISTINCT category')
-                ->get()
-                ->getResultArray();
+            // Unique categories - FIXED: Correct DISTINCT syntax
+            $categories = $this->db->query("SELECT DISTINCT category FROM email_templates WHERE category IS NOT NULL AND category != ''")->getResultArray();
             $categoryCount = count($categories);
             
             // Most used template - get the highest used_count
@@ -249,8 +263,6 @@ class EmailTemplatesController extends SessionController
                 'categories' => (int)$categoryCount,
                 'most_used' => (int)$mostUsedCount
             ];
-            
-            log_message('debug', 'Stats data: ' . json_encode($stats));
             
             return $this->response->setJSON([
                 'status' => 'success',

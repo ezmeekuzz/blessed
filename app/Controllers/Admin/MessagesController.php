@@ -1,6 +1,4 @@
 <?php
-// File: app/Controllers/Admin/MessagesController.php
-// Contact Messages Controller - Adjusted for your existing model
 
 namespace App\Controllers\Admin;
 
@@ -56,23 +54,21 @@ class MessagesController extends SessionController
                         email,
                         subject,
                         message,
-                        priority,
-                        status,
                         created_at,
                         phone,
-                        ip_address
+                        ip_address,
+                        is_read
                     ')
                     ->orderBy('contact_id', 'DESC');
         
         // Apply filters
         $status = $this->request->getPost('status');
         if ($status && $status !== '') {
-            $builder->where('status', $status);
-        }
-        
-        $priority = $this->request->getPost('priority');
-        if ($priority && $priority !== '') {
-            $builder->where('priority', $priority);
+            if ($status === 'unread') {
+                $builder->where('is_read', 0);
+            } elseif ($status === 'read') {
+                $builder->where('is_read', 1);
+            }
         }
         
         $dateRange = $this->request->getPost('date_range');
@@ -91,32 +87,32 @@ class MessagesController extends SessionController
         $json = $response->getBody();
         $result = json_decode($json, true);
         
-        // Transform data to ensure proper format
+        // The data from DataTable is in $result['data']
+        // Each row is an array of values in order of SELECT columns
         $data = [];
-        if (isset($result['data']) && is_array($result['data'])) {
-            foreach ($result['data'] as $row) {
-                $data[] = [
-                    'contact_id' => $row[0] ?? $row['contact_id'] ?? null,
-                    'name' => $row[1] ?? $row['name'] ?? '',
-                    'email' => $row[2] ?? $row['email'] ?? '',
-                    'subject' => $row[3] ?? $row['subject'] ?? '',
-                    'message' => $row[4] ?? $row['message'] ?? '',
-                    'priority' => $row[5] ?? $row['priority'] ?? 'medium',
-                    'status' => $row[6] ?? $row['status'] ?? 'unread',
-                    'created_at' => $row[7] ?? $row['created_at'] ?? null,
-                    'phone' => $row[8] ?? $row['phone'] ?? null,
-                    'ip_address' => $row[9] ?? $row['ip_address'] ?? null
-                ];
-            }
+        foreach ($result['data'] as $row) {
+            $data[] = [
+                'contact_id' => $row[0],
+                'name' => $row[1],
+                'email' => $row[2],
+                'subject' => $row[3],
+                'message' => $row[4],
+                'created_at' => $row[5],
+                'phone' => $row[6],
+                'ip_address' => $row[7],
+                'is_read' => $row[8],
+                'status' => ($row[8] == 0) ? 'unread' : 'read'
+            ];
         }
         
         // Get statistics
         $stats = $this->getStatistics();
         
+        // Return in the format DataTables expects
         return $this->response->setJSON([
-            'draw' => $result['draw'] ?? 1,
-            'recordsTotal' => $result['recordsTotal'] ?? 0,
-            'recordsFiltered' => $result['recordsFiltered'] ?? 0,
+            'draw' => $result['draw'],
+            'recordsTotal' => $result['recordsTotal'],
+            'recordsFiltered' => $result['recordsFiltered'],
             'data' => $data,
             'stats' => $stats
         ]);
@@ -133,10 +129,7 @@ class MessagesController extends SessionController
         $total = $db->table('contact_messages')->countAllResults();
         
         // Unread messages
-        $unread = $db->table('contact_messages')->where('status', 'unread')->countAllResults();
-        
-        // Replied messages
-        $replied = $db->table('contact_messages')->where('status', 'replied')->countAllResults();
+        $unread = $db->table('contact_messages')->where('is_read', 0)->countAllResults();
         
         // Today's messages
         $today = date('Y-m-d');
@@ -145,7 +138,6 @@ class MessagesController extends SessionController
         return [
             'total' => $total,
             'unread' => $unread,
-            'replied' => $replied,
             'today' => $todayCount
         ];
     }
@@ -171,8 +163,8 @@ class MessagesController extends SessionController
             ]);
         }
         
-        $messageModel = new ContactMessagesModel();
-        $message = $messageModel->find($id);
+        $messagesModel = new ContactMessagesModel();
+        $message = $messagesModel->find($id);
         
         if (!$message) {
             return $this->response->setJSON([
@@ -182,137 +174,29 @@ class MessagesController extends SessionController
         }
         
         // Mark as read if it's unread
-        if ($message['status'] === 'unread') {
-            $messageModel->update($id, ['status' => 'read']);
-            $message['status'] = 'read';
+        if ($message['is_read'] == 0) {
+            $messagesModel->update($id, ['is_read' => 1]);
+            $message['is_read'] = 1;
         }
         
-        // Format date
-        $message['formatted_date'] = date('F d, Y h:i:s A', strtotime($message['created_at']));
+        // Prepare data for view
+        $messageData = [
+            'contact_id' => $message['contact_id'],
+            'name' => htmlspecialchars($message['name']),
+            'email' => htmlspecialchars($message['email']),
+            'phone' => htmlspecialchars($message['phone'] ?? 'Not provided'),
+            'subject' => htmlspecialchars($message['subject']),
+            'message' => nl2br(htmlspecialchars($message['message'])),
+            'ip_address' => $message['ip_address'] ?? 'Not recorded',
+            'is_read' => $message['is_read'],
+            'status' => ($message['is_read'] == 0) ? 'unread' : 'read',
+            'created_at' => isset($message['created_at']) ? date('F d Y, h:i:s A', strtotime($message['created_at'])) : 'N/A'
+        ];
         
         return $this->response->setJSON([
             'status' => 'success',
-            'data' => $message
+            'data' => $messageData
         ]);
-    }
-    
-    /**
-     * Reply to a message
-     */
-    public function reply($id)
-    {
-        // Check if user is logged in
-        if (!$this->session->get('AdminLoggedIn')) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Unauthorized'
-            ]);
-        }
-        
-        // Check if it's an AJAX request
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Invalid request'
-            ]);
-        }
-        
-        $replyMessage = $this->request->getPost('reply_message');
-        $ccMe = $this->request->getPost('cc_me');
-        
-        if (empty($replyMessage)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Reply message cannot be empty'
-            ]);
-        }
-        
-        $messageModel = new ContactMessagesModel();
-        $message = $messageModel->find($id);
-        
-        if (!$message) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Message not found'
-            ]);
-        }
-        
-        // Send email reply
-        $email = \Config\Services::email();
-        
-        // Configure email - Update these settings as needed
-        $email->setFrom('noreply@yourdomain.com', 'Admin Support');
-        $email->setTo($message['email']);
-        
-        if (!empty($ccMe)) {
-            $email->setCC($ccMe);
-        }
-        
-        $email->setSubject('Re: ' . $message['subject']);
-        
-        // Build email body
-        $body = "
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: #667eea; color: white; padding: 20px; text-align: center; }
-                .content { padding: 20px; background: #f9f9f9; }
-                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-                .original-message { background: #e9ecef; padding: 15px; margin-top: 20px; border-left: 4px solid #667eea; }
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <div class='header'>
-                    <h2>Response to Your Inquiry</h2>
-                </div>
-                <div class='content'>
-                    <p>Dear " . htmlspecialchars($message['name']) . ",</p>
-                    <p>" . nl2br(htmlspecialchars($replyMessage)) . "</p>
-                    <p>Best regards,<br>Support Team</p>
-                    
-                    <div class='original-message'>
-                        <strong>Your original message:</strong><br>
-                        " . nl2br(htmlspecialchars($message['message'])) . "
-                    </div>
-                </div>
-                <div class='footer'>
-                    <p>This is an automated response. Please do not reply to this email.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        ";
-        
-        $email->setMessage($body);
-        $email->setMailType('html');
-        
-        $sent = $email->send();
-        
-        if ($sent) {
-            // Update message status to replied
-            $messageModel->update($id, [
-                'status' => 'replied',
-                'replied_at' => date('Y-m-d H:i:s'),
-                'replied_by' => $this->session->get('AdminID')
-            ]);
-            
-            return $this->response->setJSON([
-                'status' => 'success',
-                'message' => 'Reply sent successfully'
-            ]);
-        } else {
-            // Get email error if available
-            $error = $email->printDebugger(['headers']);
-            log_message('error', 'Email send failed: ' . $error);
-            
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Failed to send email. Please check email configuration.'
-            ]);
-        }
     }
     
     /**
@@ -336,23 +220,31 @@ class MessagesController extends SessionController
             ]);
         }
         
-        $messageModel = new ContactMessagesModel();
-        $message = $messageModel->find($id);
+        $messagesModel = new ContactMessagesModel();
+        
+        // Find the message by ID
+        $message = $messagesModel->find($id);
         
         if ($message) {
-            $deleted = $messageModel->delete($id);
+            // Delete the message record
+            $deleted = $messagesModel->delete($id);
             
             if ($deleted) {
                 return $this->response->setJSON([
                     'status' => 'success',
                     'message' => 'Message deleted successfully'
                 ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to delete message'
+                ]);
             }
         }
         
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Message not found or could not be deleted'
+            'message' => 'Message not found'
         ]);
     }
     
@@ -384,8 +276,8 @@ class MessagesController extends SessionController
         foreach ($ids as $id) {
             $db->table('contact_messages')
                ->where('contact_id', $id)
-               ->where('status', 'unread')
-               ->update(['status' => 'read']);
+               ->where('is_read', 0)
+               ->update(['is_read' => 1]);
         }
         
         $db->transComplete();
@@ -425,8 +317,8 @@ class MessagesController extends SessionController
             ]);
         }
         
-        $messageModel = new ContactMessagesModel();
-        $deleted = $messageModel->whereIn('contact_id', $ids)->delete();
+        $messagesModel = new ContactMessagesModel();
+        $deleted = $messagesModel->whereIn('contact_id', $ids)->delete();
         
         if ($deleted) {
             return $this->response->setJSON([
@@ -442,7 +334,7 @@ class MessagesController extends SessionController
     }
     
     /**
-     * Get unread count (for sidebar badge - optional)
+     * Get unread count (for sidebar badge)
      */
     public function getUnreadCount()
     {
@@ -451,7 +343,7 @@ class MessagesController extends SessionController
         }
         
         $db = db_connect();
-        $count = $db->table('contact_messages')->where('status', 'unread')->countAllResults();
+        $count = $db->table('contact_messages')->where('is_read', 0)->countAllResults();
         
         return $this->response->setJSON(['count' => $count]);
     }

@@ -20,16 +20,6 @@
         white-space: normal !important;
     }
     
-    /* Column widths */
-    #contactmessageslist th:nth-child(1) { width: 5%; }  /* ID */
-    #contactmessageslist th:nth-child(2) { width: 15%; } /* Name */
-    #contactmessageslist th:nth-child(3) { width: 18%; } /* Email */
-    #contactmessageslist th:nth-child(4) { width: 10%; } /* Subject */
-    #contactmessageslist th:nth-child(5) { width: 25%; } /* Message */
-    #contactmessageslist th:nth-child(6) { width: 8%; }  /* Status */
-    #contactmessageslist th:nth-child(7) { width: 12%; } /* Date */
-    #contactmessageslist th:nth-child(8) { width: 7%; }  /* Actions */
-    
     /* Status badges */
     .status-badge {
         display: inline-block;
@@ -44,35 +34,6 @@
         color: white;
     }
     .status-read {
-        background: #28a745;
-        color: white;
-    }
-    .status-replied {
-        background: #17a2b8;
-        color: white;
-    }
-    .status-archived {
-        background: #6c757d;
-        color: white;
-    }
-    
-    /* Priority badges */
-    .priority-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: 600;
-    }
-    .priority-high {
-        background: #dc3545;
-        color: white;
-    }
-    .priority-medium {
-        background: #ffc107;
-        color: #212529;
-    }
-    .priority-low {
         background: #28a745;
         color: white;
     }
@@ -128,7 +89,6 @@
         margin-bottom: 10px;
     }
     .stats-card.unread i { color: #dc3545; }
-    .stats-card.replied i { color: #17a2b8; }
     .stats-card.today i { color: #28a745; }
     .stats-card.total i { color: #667eea; }
     .stats-card h3 {
@@ -168,17 +128,6 @@
         margin-top: 15px;
         white-space: pre-wrap;
         line-height: 1.6;
-    }
-    
-    /* Reply section */
-    .reply-section {
-        background: #e8f4fd;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 20px;
-    }
-    .reply-section textarea {
-        resize: vertical;
     }
     
     /* Filter section */
@@ -244,28 +193,21 @@
             
             <!-- Stats Cards -->
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card unread">
                         <i class="fas fa-envelope"></i>
                         <h3 id="unreadCount">0</h3>
                         <p>Unread Messages</p>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card replied">
-                        <i class="fas fa-reply-all"></i>
-                        <h3 id="repliedCount">0</h3>
-                        <p>Replied</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card today">
                         <i class="fas fa-calendar-day"></i>
                         <h3 id="todayCount">0</h3>
                         <p>Today's Messages</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card total">
                         <i class="fas fa-database"></i>
                         <h3 id="totalCount">0</h3>
@@ -281,43 +223,24 @@
                             <div class="card-heading">
                                 <h4 class="card-title"><i class="fas fa-envelope-open-text"></i> Contact Messages Masterlist</h4>
                             </div>
-                            <div class="mt-2 mt-sm-0">
-                                <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" style="display: none;">
-                                    <i class="fas fa-trash"></i> Delete Selected
-                                </button>
-                                <button class="btn btn-success btn-sm" id="bulkMarkReadBtn" style="display: none;">
-                                    <i class="fas fa-check-double"></i> Mark as Read
-                                </button>
-                            </div>
                         </div>
                         <div class="card-body">
                             <!-- Filter Section -->
                             <div class="filter-section">
                                 <div class="row align-items-end">
-                                    <div class="col-md-3 mb-2 mb-md-0">
+                                    <div class="col-md-4 mb-2 mb-md-0">
                                         <label class="form-label">Status Filter</label>
                                         <select id="statusFilter" class="form-control">
-                                            <option value="">All Status</option>
+                                            <option value="">All Messages</option>
                                             <option value="unread">Unread</option>
                                             <option value="read">Read</option>
-                                            <option value="replied">Replied</option>
-                                            <option value="archived">Archived</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3 mb-2 mb-md-0">
-                                        <label class="form-label">Priority Filter</label>
-                                        <select id="priorityFilter" class="form-control">
-                                            <option value="">All Priorities</option>
-                                            <option value="high">High</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="low">Low</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-2 mb-md-0">
+                                    <div class="col-md-4 mb-2 mb-md-0">
                                         <label class="form-label">Date Range</label>
                                         <input type="text" id="dateRange" class="form-control" placeholder="Select date range">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <button class="btn btn-secondary btn-block" id="resetFiltersBtn">
                                             <i class="fas fa-undo-alt"></i> Reset Filters
                                         </button>
@@ -350,15 +273,14 @@
                                             <th class="text-center" style="width: 3%;">
                                                 <input type="checkbox" id="selectAllCheckbox">
                                             </th>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Subject</th>
-                                            <th>Message</th>
-                                            <th>Priority</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                            <th>Actions</th>
+                                            <th style="width: 5%;">ID</th>
+                                            <th style="width: 12%;">Name</th>
+                                            <th style="width: 15%;">Email</th>
+                                            <th style="width: 15%;">Subject</th>
+                                            <th style="width: 30%;">Message</th>
+                                            <th style="width: 10%;">Status</th>
+                                            <th style="width: 10%;">Date</th>
+                                            <th style="width: 5%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -373,7 +295,7 @@
     </div>
 </div>
 
-<!-- View/Reply Message Modal -->
+<!-- View Message Modal -->
 <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">

@@ -1,6 +1,6 @@
 <?php
 // File: app/Views/pages/admin/email-templates.php
-// Email Templates Management View - FIXED
+// Email Templates Management View - WITH DYNAMIC STATS
 ?>
 
 <?=$this->include('templates/admin/header');?>
@@ -32,9 +32,11 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         margin-bottom: 20px;
         transition: transform 0.3s ease;
+        cursor: pointer;
     }
     .stats-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
     .stats-card i {
         font-size: 32px;
@@ -53,6 +55,16 @@
         color: #6c757d;
         margin-bottom: 0;
         font-size: 14px;
+    }
+    
+    /* Loading animation for stats */
+    .stats-loading {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
     
     /* Template cards */
@@ -258,6 +270,20 @@
         overflow-y: auto;
     }
     
+    /* Stats refresh indicator */
+    .stats-refresh {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stats-card:hover .stats-refresh {
+        opacity: 0.7;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .stats-card h3 {
@@ -301,34 +327,38 @@
                 </div>
             </div>
             
-            <!-- Stats Cards -->
-            <div class="row">
+            <!-- Stats Cards - Will be populated dynamically via JavaScript -->
+            <div class="row" id="statsContainer">
                 <div class="col-md-3">
                     <div class="stats-card total">
                         <i class="fas fa-database"></i>
-                        <h3 id="totalTemplates">0</h3>
+                        <h3 id="totalTemplates">--</h3>
                         <p>Total Templates</p>
+                        <small class="stats-refresh text-muted"><i class="fas fa-sync-alt"></i> Click to refresh</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card active">
                         <i class="fas fa-check-circle"></i>
-                        <h3 id="activeTemplates">0</h3>
+                        <h3 id="activeTemplates">--</h3>
                         <p>Active Templates</p>
+                        <small class="stats-refresh text-muted"><i class="fas fa-sync-alt"></i> Click to refresh</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card categories">
                         <i class="fas fa-tags"></i>
-                        <h3 id="totalCategories">0</h3>
+                        <h3 id="totalCategories">--</h3>
                         <p>Categories</p>
+                        <small class="stats-refresh text-muted"><i class="fas fa-sync-alt"></i> Click to refresh</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card used">
                         <i class="fas fa-chart-line"></i>
-                        <h3 id="mostUsed">0</h3>
-                        <p>Times Used</p>
+                        <h3 id="mostUsed">--</h3>
+                        <p>Most Used Count</p>
+                        <small class="stats-refresh text-muted"><i class="fas fa-sync-alt"></i> Click to refresh</small>
                     </div>
                 </div>
             </div>
@@ -348,12 +378,8 @@
             </div>
             
             <div class="row">
-                <div class="col-lg-12 text-center py-5">
+                <div class="col-lg-12">
                     <div id="templatesGrid"></div>
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading templates...</p>
                 </div>
             </div>
         </div>

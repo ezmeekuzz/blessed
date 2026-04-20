@@ -1,5 +1,5 @@
 // File: assets/js/admin/messages.js
-// Contact Messages Masterlist JavaScript
+// Contact Messages JavaScript
 
 $(document).ready(function () {
     // Initialize date range picker
@@ -20,7 +20,6 @@ $(document).ready(function () {
             "type": "POST",
             "data": function(d) {
                 d.status = $('#statusFilter').val();
-                d.priority = $('#priorityFilter').val();
                 d.date_range = $('#dateRange').val();
                 return d;
             },
@@ -28,7 +27,6 @@ $(document).ready(function () {
                 // Update stats cards
                 if (json.stats) {
                     $('#unreadCount').text(json.stats.unread || 0);
-                    $('#repliedCount').text(json.stats.replied || 0);
                     $('#todayCount').text(json.stats.today || 0);
                     $('#totalCount').text(json.stats.total || 0);
                 }
@@ -95,23 +93,11 @@ $(document).ready(function () {
                 }
             },
             { 
-                "data": "priority",
-                "render": function(data, type, row) {
-                    let priority = data || 'medium';
-                    let priorityClass = priority === 'high' ? 'priority-high' : (priority === 'medium' ? 'priority-medium' : 'priority-low');
-                    let icon = priority === 'high' ? 'fa-arrow-up' : (priority === 'medium' ? 'fa-minus' : 'fa-arrow-down');
-                    return `<span class="priority-badge ${priorityClass}">
-                                <i class="fas ${icon}"></i> ${priority.toUpperCase()}
-                            </span>`;
-                },
-                "className": "text-center"
-            },
-            { 
                 "data": "status",
                 "render": function(data, type, row) {
                     let status = data || 'unread';
-                    let statusClass = status === 'unread' ? 'status-unread' : (status === 'read' ? 'status-read' : (status === 'replied' ? 'status-replied' : 'status-archived'));
-                    let icon = status === 'unread' ? 'fa-envelope' : (status === 'read' ? 'fa-check' : (status === 'replied' ? 'fa-reply' : 'fa-archive'));
+                    let statusClass = status === 'unread' ? 'status-unread' : 'status-read';
+                    let icon = status === 'unread' ? 'fa-envelope' : 'fa-check-circle';
                     return `<span class="status-badge ${statusClass}">
                                 <i class="fas ${icon}"></i> ${status.toUpperCase()}
                             </span>`;
@@ -141,7 +127,7 @@ $(document).ready(function () {
                 "render": function (data, type, row) {
                     return `
                         <div class="action-buttons">
-                            <a href="#" title="View/Reply" class="view-btn" data-id="${row.contact_id}" style="color: #007bff;">
+                            <a href="#" title="View Message" class="view-btn" data-id="${row.contact_id}" style="color: #007bff;">
                                 <i class="ti ti-eye" style="font-size: 18px;"></i>
                             </a>
                             <a href="#" title="Delete" class="delete-btn" data-id="${row.contact_id}" style="color: #b91a0f;">
@@ -154,7 +140,7 @@ $(document).ready(function () {
                 "orderable": false
             }
         ],
-        "order": [[8, 'desc']],
+        "order": [[7, 'desc']],
         "pageLength": 25,
         "responsive": true,
         "language": {
@@ -183,7 +169,7 @@ $(document).ready(function () {
     });
     
     // Reload table when filters change
-    $('#statusFilter, #priorityFilter, #dateRange').on('change', function() {
+    $('#statusFilter, #dateRange').on('change', function() {
         selectedIds.clear();
         updateBulkActionsBar();
         table.ajax.reload();
@@ -192,7 +178,6 @@ $(document).ready(function () {
     // Reset filters
     $('#resetFiltersBtn').on('click', function() {
         $('#statusFilter').val('');
-        $('#priorityFilter').val('');
         $('#dateRange').val('');
         selectedIds.clear();
         updateBulkActionsBar();
@@ -219,10 +204,8 @@ $(document).ready(function () {
         $('#selectedCount').text(count);
         if (count > 0) {
             $('#bulkActionsBar').addClass('show');
-            $('#bulkDeleteBtn, #bulkMarkReadBtn').show();
         } else {
             $('#bulkActionsBar').removeClass('show');
-            $('#bulkDeleteBtn, #bulkMarkReadBtn').hide();
         }
     }
     
@@ -346,7 +329,7 @@ $(document).ready(function () {
         updateBulkActionsBar();
     });
     
-    // View/Reply Message
+    // View Message
     $(document).on('click', '.view-btn', function () {
         let id = $(this).data('id');
         
@@ -391,8 +374,7 @@ $(document).ready(function () {
     });
     
     function displayMessageDetail(message) {
-        let statusClass = message.status === 'unread' ? 'status-unread' : (message.status === 'read' ? 'status-read' : 'status-replied');
-        let priorityClass = message.priority === 'high' ? 'priority-high' : (message.priority === 'medium' ? 'priority-medium' : 'priority-low');
+        let statusClass = message.is_read == 0 ? 'status-unread' : 'status-read';
         
         let html = `
             <div class="message-detail-header">
@@ -408,25 +390,15 @@ $(document).ready(function () {
                 <div class="col-md-6">
                     <div class="detail-row">
                         <span class="message-detail-label"><i class="fas fa-tag"></i> Status:</span>
-                        <span class="status-badge ${statusClass}">${message.status.toUpperCase()}</span>
+                        <span class="status-badge ${statusClass}">${message.is_read == 0 ? 'UNREAD' : 'READ'}</span>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="detail-row">
-                        <span class="message-detail-label"><i class="fas fa-flag"></i> Priority:</span>
-                        <span class="priority-badge ${priorityClass}">${message.priority.toUpperCase()}</span>
+                        <span class="message-detail-label"><i class="fas fa-phone"></i> Phone:</span>
+                        <span>${escapeHtml(message.phone) || '<span class="text-muted">Not provided</span>'}</span>
                     </div>
                 </div>
-            </div>
-            
-            <div class="detail-row">
-                <span class="message-detail-label"><i class="fas fa-phone"></i> Phone:</span>
-                <span>${escapeHtml(message.phone) || '<span class="text-muted">Not provided</span>'}</span>
-            </div>
-            
-            <div class="detail-row">
-                <span class="message-detail-label"><i class="fas fa-globe"></i> IP Address:</span>
-                <span>${escapeHtml(message.ip_address) || '<span class="text-muted">Not recorded</span>'}</span>
             </div>
             
             <h6 class="mt-3"><i class="fas fa-comment-dots"></i> Message:</h6>
@@ -435,94 +407,7 @@ $(document).ready(function () {
             </div>
         `;
         
-        // Add reply section if status is not archived
-        if (message.status !== 'archived') {
-            html += `
-                <div class="reply-section">
-                    <h6><i class="fas fa-reply"></i> Reply to ${escapeHtml(message.name)}</h6>
-                    <form id="replyForm">
-                        <div class="form-group">
-                            <label>Your Reply Message:</label>
-                            <textarea class="form-control" id="replyMessage" rows="5" placeholder="Type your reply here..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>CC Me (optional):</label>
-                            <input type="email" class="form-control" id="replyCC" placeholder="admin@example.com">
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Send Reply
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </form>
-                </div>
-            `;
-        }
-        
         $('#messageDetailContent').html(html);
-        
-        // Handle reply form submission
-        $('#replyForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            let replyMessage = $('#replyMessage').val();
-            if (!replyMessage.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Empty Reply',
-                    text: 'Please enter a reply message'
-                });
-                return;
-            }
-            
-            Swal.fire({
-                title: 'Sending Reply...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            $.ajax({
-                url: '/admin/messages/reply/' + message.contact_id,
-                method: 'POST',
-                data: {
-                    reply_message: replyMessage,
-                    cc_me: $('#replyCC').val()
-                },
-                dataType: 'json',
-                success: function(response) {
-                    Swal.close();
-                    
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Reply Sent!',
-                            text: response.message,
-                            confirmButtonColor: '#3085d6'
-                        }).then(() => {
-                            $('#messageModal').modal('hide');
-                            table.ajax.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Failed to send reply'
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.close();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Something went wrong while sending the reply'
-                    });
-                }
-            });
-        });
     }
     
     // Delete single message

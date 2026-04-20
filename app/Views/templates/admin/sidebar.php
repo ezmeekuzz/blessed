@@ -173,7 +173,7 @@
             <li <?php if($activeMenu == 'messages') echo 'class="active"'; ?>>
                 <a href="/admin/messages">
                     <i class="nav-icon fas fa-envelope"></i>
-                    <span class="nav-title">Contact Messages</span>
+                    <span class="nav-title">Messages</span>
                 </a>
             </li>
 
@@ -194,23 +194,11 @@
             </li>
 
             <li class="nav-static-title">SETTINGS</li>
-            <!-- Website Settings -->
-            <li <?php if(in_array($activeMenu, ['generalsettings', 'socialmedia', 'seosettings'])) echo 'class="active"'; ?>>
-                <a class="has-arrow" href="javascript:void(0)">
-                    <i class="nav-icon fas fa-cog"></i>
-                    <span class="nav-title">Website Settings</span>
+            <li <?php if($activeMenu == 'settings') echo 'class="active"'; ?>>
+                <a href="/admin/settings">
+                    <i class="nav-icon ti ti-settings"></i>
+                    <span class="nav-title">SETTINGS</span>
                 </a>
-                <ul>
-                    <li <?php if($activeMenu == 'generalsettings') echo 'class="active"'; ?>>
-                        <a href='/admin/general-settings'>General Settings</a>
-                    </li>
-                    <li <?php if($activeMenu == 'socialmedia') echo 'class="active"'; ?>>
-                        <a href='/admin/social-media'>Social Media</a>
-                    </li>
-                    <li <?php if($activeMenu == 'seosettings') echo 'class="active"'; ?>>
-                        <a href='/admin/seo-settings'>SEO Settings</a>
-                    </li>
-                </ul>
             </li>
 
             <li class="nav-static-title">ANALYTICS</li>

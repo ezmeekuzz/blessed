@@ -209,10 +209,10 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($rout
     $routes->get('messages', 'MessagesController::index');
     $routes->post('messages/getData', 'MessagesController::getData');
     $routes->get('messages/getMessage/(:num)', 'MessagesController::getMessage/$1');
-    $routes->post('messages/reply/(:num)', 'MessagesController::reply/$1');
     $routes->delete('messages/delete/(:num)', 'MessagesController::delete/$1');
     $routes->post('messages/bulkMarkRead', 'MessagesController::bulkMarkRead');
     $routes->post('messages/bulkDelete', 'MessagesController::bulkDelete');
+    $routes->get('messages/unread-count', 'MessagesController::getUnreadCount');
 });
 
 // Send Newsletter Routes
@@ -233,11 +233,17 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($rout
 $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
     $routes->get('email-templates', 'EmailTemplatesController::index');
     $routes->get('email-templates/list', 'EmailTemplatesController::getList');
+    $routes->get('email-templates/stats', 'EmailTemplatesController::getStats');
     $routes->get('email-templates/get/(:num)', 'EmailTemplatesController::getTemplate/$1');
     $routes->post('email-templates/save', 'EmailTemplatesController::save');
-    $routes->delete('email-templates/delete/(:num)', 'EmailTemplatesController::delete/$1');
     $routes->post('email-templates/toggleStatus/(:num)', 'EmailTemplatesController::toggleStatus/$1');
     $routes->post('email-templates/duplicate/(:num)', 'EmailTemplatesController::duplicate/$1');
-    $routes->get('email-templates/stats', 'EmailTemplatesController::getStats');
     $routes->post('email-templates/incrementUsage/(:num)', 'EmailTemplatesController::incrementUsage/$1');
+    $routes->delete('email-templates/delete/(:num)', 'EmailTemplatesController::delete/$1');
+});
+
+// General Settings Routes
+$routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->get('settings', 'SettingsController::index');
+    $routes->post('settings/update', 'SettingsController::update');
 });
