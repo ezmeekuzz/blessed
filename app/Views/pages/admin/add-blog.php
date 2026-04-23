@@ -21,20 +21,6 @@
                 </div>
             </div>
 
-            <!-- Display Errors -->
-            <?php if(session()->getFlashdata('errors')): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <ul class="mb-0">
-                        <?php foreach(session()->getFlashdata('errors') as $error): ?>
-                            <li><?= $error ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            <?php endif; ?>
-
             <!-- Blog Form -->
             <form id="addblog" enctype="multipart/form-data">
                 <?= csrf_field() ?>
@@ -56,15 +42,31 @@
                                 <!-- Slug (Auto-generated) -->
                                 <div class="form-group">
                                     <label for="slug">Slug <span class="text-danger">*</span></label>
-                                    <input type="text" name="slug" id="slug" class="form-control" placeholder="auto-generated-from-title" value="<?= old('slug') ?>" readonly>
-                                    <small class="form-text text-muted">URL-friendly version of the title. Auto-generated.</small>
+                                    <input type="text" name="slug" id="slug" class="form-control" placeholder="auto-generated-from-title" value="<?= old('slug') ?>">
+                                    <small class="form-text text-muted">URL-friendly version of the title. Auto-generated, but you can edit.</small>
+                                    <div id="slugError" class="text-danger small mt-1" style="display: none;">Slug already exists. Please use a different slug.</div>
                                 </div>
 
-                                <!-- Description -->
+                                <!-- Description (Meta Description for SEO) -->
                                 <div class="form-group">
-                                    <label for="description">Description</label>
-                                    <textarea class="form-control" name="description" id="description" placeholder="Enter a short description" rows="3"><?= old('description') ?></textarea>
-                                    <small class="form-text text-muted">A brief summary of the blog post (meta description).</small>
+                                    <label for="description">Meta Description <span class="text-muted">(SEO)</span></label>
+                                    <textarea class="form-control" name="description" id="description" placeholder="Enter meta description for SEO (150-160 characters recommended)" rows="2"><?= old('description') ?></textarea>
+                                    <small class="form-text text-muted">Brief description for search engines. This also serves as your meta description.</small>
+                                    <div class="character-count small text-muted mt-1"><span id="descCount">0</span>/160 characters</div>
+                                </div>
+
+                                <!-- Excerpt -->
+                                <div class="form-group">
+                                    <label for="excerpt">Excerpt <span class="text-muted">(Short Summary)</span></label>
+                                    <textarea class="form-control" name="excerpt" id="excerpt" placeholder="Short summary displayed on blog listing pages" rows="2"><?= old('excerpt') ?></textarea>
+                                    <small class="form-text text-muted">Short summary displayed on blog listing pages. If empty, will use meta description.</small>
+                                </div>
+
+                                <!-- Meta Keywords -->
+                                <div class="form-group">
+                                    <label for="meta_keywords">Meta Keywords <span class="text-muted">(SEO)</span></label>
+                                    <input type="text" class="form-control" name="meta_keywords" id="meta_keywords" placeholder="keyword1, keyword2, keyword3" value="<?= old('meta_keywords') ?>">
+                                    <small class="form-text text-muted">Comma-separated keywords for SEO.</small>
                                 </div>
 
                                 <!-- Content (WYSIWYG) -->
@@ -99,6 +101,15 @@
                                     <label for="published_at">Publish Date</label>
                                     <input type="datetime-local" class="form-control" name="published_at" id="published_at" value="<?= old('published_at', date('Y-m-d\TH:i')) ?>">
                                     <small class="form-text text-muted">Schedule when to publish this post.</small>
+                                </div>
+
+                                <!-- Featured Post -->
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="is_featured" name="is_featured" value="1" <?= old('is_featured') ? 'checked' : '' ?>>
+                                        <label class="custom-control-label" for="is_featured">Feature this post</label>
+                                    </div>
+                                    <small class="form-text text-muted">Featured posts appear prominently on the blog page.</small>
                                 </div>
                             </div>
                         </div>
@@ -135,14 +146,13 @@
                                 <h5 class="card-title mb-0"><i class="fa fa-image"></i> Featured Image</h5>
                             </div>
                             <div class="card-body">
-                                <!-- Blog Image Upload -->
                                 <div class="form-group">
                                     <label for="featured_image">Featured Image</label>
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input" id="featured_image" name="featured_image" accept="image/png, image/gif, image/jpeg, image/webp">
                                         <label class="custom-file-label" for="featured_image">Choose file</label>
                                     </div>
-                                    <small class="form-text text-muted">Recommended size: 1200x630px. Max 2MB.</small>
+                                    <small class="form-text text-muted">Recommended size: 1200x630px. Max 2MB. Supported: JPG, PNG, GIF, WEBP.</small>
                                     <div id="imagePreview" class="mt-2" style="display: none;">
                                         <img src="" class="img-fluid rounded" alt="Preview">
                                     </div>
@@ -158,10 +168,8 @@
                             <div class="card-body">
                                 <div class="form-group">
                                     <label for="tags">Tags</label>
-                                    <input type="text" class="form-control" id="tags" name="tags" 
-                                        data-role="tagsinputCustom" 
-                                        data-placeholder="" >
-                                    <small class="form-text text-muted">Type a tag and press Enter to add.</small>
+                                    <input type="text" class="form-control" id="tags" name="tags" data-role="tagsinput" placeholder="Add tags...">
+                                    <small class="form-text text-muted">Type a tag and press Enter to add. Separate multiple tags with commas.</small>
                                 </div>
                             </div>
                         </div>
@@ -169,7 +177,7 @@
                         <!-- Action Buttons -->
                         <div class="card shadow-sm">
                             <div class="card-body">
-                                <button type="submit" class="btn btn-primary btn-block">
+                                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                                     <i class="fa fa-save"></i> Publish Blog
                                 </button>
                                 <a href="/admin/add-blog" class="btn btn-secondary btn-block mt-2">

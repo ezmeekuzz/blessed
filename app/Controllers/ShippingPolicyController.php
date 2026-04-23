@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class HowToController extends BaseController
+class ShippingPolicyController extends BaseController
 {
     public function index()
     {
@@ -14,6 +14,6 @@ class HowToController extends BaseController
             'activeMenu' => 'home'
         ];
 
-        return view('pages/how-to', $data);
+        return view('pages/shipping-policy', $data);
     }
 }

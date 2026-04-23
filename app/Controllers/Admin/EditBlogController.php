@@ -50,7 +50,7 @@ class EditBlogController extends SessionController
         
         // Validation rules
         $rules = [
-            'title' => 'required|min_length[3]',
+            'title' => 'required|min_length[3]|max_length[255]',
             'slug' => 'required',
             'blog_category_id' => 'required|is_not_unique[blog_categories.blog_category_id]',
             'content' => 'required',
@@ -111,16 +111,19 @@ class EditBlogController extends SessionController
             }
         }
         
-        // Prepare data
+        // Prepare data with all fields
         $data = [
             'title' => $this->request->getPost('title'),
             'slug' => $this->request->getPost('slug'),
-            'description' => $this->request->getPost('description'),
+            'description' => $this->request->getPost('description'), // Serves as meta description
+            'excerpt' => $this->request->getPost('excerpt'),
             'blog_category_id' => $this->request->getPost('blog_category_id'),
             'featured_image' => $featuredImage,
             'tags' => $this->request->getPost('tags'),
             'status' => $this->request->getPost('status'),
             'content' => $this->request->getPost('content'),
+            'meta_keywords' => $this->request->getPost('meta_keywords'),
+            'is_featured' => $this->request->getPost('is_featured') ? 1 : 0,
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
@@ -155,5 +158,20 @@ class EditBlogController extends SessionController
                                      ->findAll();
         
         return $this->response->setJSON($categories);
+    }
+    
+    public function checkSlug()
+    {
+        $slug = $this->request->getPost('slug');
+        $id = $this->request->getPost('id');
+        $blogModel = new BlogPostsModel();
+        
+        $exists = $blogModel->where('slug', $slug)
+                            ->where('blog_post_id !=', $id)
+                            ->first();
+        
+        return $this->response->setJSON([
+            'exists' => !empty($exists)
+        ]);
     }
 }

@@ -24,7 +24,7 @@
                 <h1 class="display-3 fw-semibold"><span style="color: #3D204E;">Faith As The Foundation Of Every Product</span></h1>
                 <p class="lead fs-5 mt-4">We understand the power of God's word in shaping our thoughts, actions, and outlook on life. By placing scripture on the products you use each day, we aim to keep you focused on His teachings, helping you meditate on His word, stay inspired, and visualize your goals with faith as your foundation. Our designs are carefully crafted to reflect the beauty and strength of scripture, making it easy to carry God's word with you wherever you go.</p>
                 <div class="d-flex gap-3 mt-4">
-                    <a href="#products" class="btn w-50 px-4 py-3 rounded-pill text-white fs-5" style="background: #3D204E;">How It Works</a>
+                    <a href="/how-to" class="btn w-50 px-4 py-3 rounded-pill text-white fs-5" style="background: #3D204E;">How It Works</a>
                 </div>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 <h1 class="display-1 fw-semibold"><span style="color: #3D204E;">Our Heart And Vision</span></h1>
                 <p class="lead fs-5 mt-4">At the core of The Blessed Manifest is a deep love for God and a passion for helping others build a faith-filled life. We believe that by surrounding yourself with reminders of God's promises, you can live with greater clarity, peace, and purpose. Each product we offer is meant to inspire and encourage you, whether you're in the midst of a challenge, striving toward a goal, or simply looking to deepen your connection to God.</p>
                 <div class="d-flex gap-3 mt-4 justify-content-center justify-content-lg-start">
-                    <a href="#products" class="btn w-50 px-4 py-3 rounded-pill text-white fs-5" style="background: #3D204E; min-width: 220px;">Start Your Journey</a>
+                    <a href="/products" class="btn w-50 px-4 py-3 rounded-pill text-white fs-5" style="background: #3D204E; min-width: 220px;">Start Your Journey</a>
                 </div>
             </div>
             <div class="col-lg-6 text-center mt-5 mt-lg-0">
@@ -78,52 +78,4 @@
     </div>
 </section>
 
-<section class="instagram-products py-5">
-    <div class="container">
-        <div class="row mb-4">
-            <div class="col-6">
-                <h2 class="display-6 fw-bold mb-4" style="color: #3D204E;">Check Out Our Products On Instagram</h2>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-5">
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-1.png" alt="Product 1" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-2.png" alt="Product 2" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-3.png" alt="Product 3" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-4.png" alt="Product 4" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 <?=$this->include('templates/footer');?>

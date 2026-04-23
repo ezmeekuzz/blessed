@@ -6,7 +6,7 @@
                         <span class="fs-5">Customized creations to inspire your daily walk with faith.</span>
                     </div>
                     <div class="col-lg-6 d-flex justify-content-center align-items-center">
-                        <a href="/products" class="btn px-5 py-3 rounded-pill text-white fs-5" style="background: #3D204E;">Start Your Journey</a>
+                        <a href="<?=base_url();?>products" class="btn px-5 py-3 rounded-pill text-white fs-5" style="background: #3D204E;">Start Your Journey</a>
                     </div>
                 </div>
                 <hr>
@@ -18,7 +18,7 @@
                     <!-- Logo/Brand Section -->
                     <div class="col-lg-3 col-md-6">
                         <a class="navbar-brand" href="#">
-                            <img src="images/logo.png" alt="The Blessed Manifest Logo">
+                            <img src="<?=base_url();?>images/logo.png" alt="The Blessed Manifest Logo">
                         </a>
                         <p class="fs-5 mt-3">Faith driven products made by you with love and purpose</p>
                     </div>
@@ -27,11 +27,11 @@
                     <div class="col-lg-3 col-md-6 footer-menus">
                         <h6 class="fw-semibold mb-3">Quick Menu</h6>
                         <ul class="list-unstyled">
-                            <li class="mb-2"><a href="/about-us" class="text-black text-decoration-none">About Us</a></li>
-                            <li class="mb-2"><a href="/products" class="text-black text-decoration-none">Products</a></li>
-                            <li class="mb-2"><a href="/blogs" class="text-black text-decoration-none">Blogs</a></li>
-                            <li class="mb-2"><a href="/faq" class="text-black text-decoration-none">FAQs</a></li>
-                            <li class="mb-2"><a href="/contact-us" class="text-black text-decoration-none">Contact Us</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>about-us" class="text-black text-decoration-none">About Us</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>products" class="text-black text-decoration-none">Products</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>blogs" class="text-black text-decoration-none">Blogs</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>faq" class="text-black text-decoration-none">FAQs</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>contact-us" class="text-black text-decoration-none">Contact Us</a></li>
                         </ul>
                     </div>
 
@@ -39,10 +39,10 @@
                     <div class="col-lg-3 col-md-6 footer-menus">
                         <h6 class="fw-semibold mb-3">Company Policies</h6>
                         <ul class="list-unstyled">
-                            <li class="mb-2"><a href="/terms-and-conditions" class="text-black text-decoration-none">Terms and Conditions</a></li>
-                            <li class="mb-2"><a href="/exchange-and-refund-policy" class="text-black text-decoration-none">Exchange & Refund Policy</a></li>
-                            <li class="mb-2"><a href="/privacy-policy" class="text-black text-decoration-none">Privacy Policy</a></li>
-                            <li class="mb-2"><a href="/shipping-policy" class="text-black text-decoration-none">Shipping policy</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>terms-and-conditions" class="text-black text-decoration-none">Terms and Conditions</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>exchange-and-refund-policy" class="text-black text-decoration-none">Exchange & Refund Policy</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>privacy-policy" class="text-black text-decoration-none">Privacy Policy</a></li>
+                            <li class="mb-2"><a href="<?=base_url();?>shipping-policy" class="text-black text-decoration-none">Shipping policy</a></li>
                         </ul>
                     </div>
 
@@ -69,14 +69,14 @@
                     <div class="col-lg-6">
                         <div class="pe-lg-4">
                             <div class="d-flex gap-3">
-                                <a href="/products" class="btn px-4 py-3 rounded-pill text-white fs-6 fw-semibold w-50" style="background: #3D204E;">
+                                <a href="<?=base_url();?>products" class="btn px-4 py-3 rounded-pill text-white fs-6 fw-semibold w-50" style="background: #3D204E;">
                                     <i class="fas fa-envelope me-2"></i>Get Inspired Today
                                 </a>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-6 text-center text-lg-end">
-                        <img src="images/cards.png" alt="Payment methods" class="w-50 img-fluid">
+                        <img src="<?=base_url();?>images/cards.png" alt="Payment methods" class="w-50 img-fluid">
                     </div>
                 </div>
 

@@ -4,26 +4,20 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
-use App\Config\Seo;
 use App\Models\UsersModel;
 
 class RegisterController extends BaseController
 {
     public function index()
     {
-        $seoConfig = new Seo();
-        $data = $seoConfig->getSeoStructure();
-        
-        $data['title'] = 'TomDigitalSpace - Latest Digital Releases, Tech Insights & Blog';
-        $data['description'] = 'Discover cutting-edge digital releases, expert tech insights, and engaging blog posts.';
-        $data['author'] = 'TomDigitalSpace Team';
-        $data['robots'] = 'index, follow';
-        $data['og_title'] = 'TomDigitalSpace - Your Gateway to Digital Innovation';
-        $data['og_site_name'] = 'TomDigitalSpace';
-        $data['og_type'] = 'website';
-        $data['og_url'] = current_url();
-        $data['canonical_url'] = current_url();
-        $data['activeMenu'] = 'home';
+        if (session()->has('user_user_id') && session()->get('user_usertype') == 'Regular User') {
+            return redirect()->to('/');
+        }
+
+        $data = [
+            'title' => 'The Blessed Manifest',
+            'activeMenu' => 'register'
+        ];
         
         return view('pages/register', $data);
     }
@@ -92,7 +86,7 @@ class RegisterController extends BaseController
             
             $emailService = \Config\Services::email();
             $emailService->setTo($emailaddress);
-            $emailService->setSubject('Verify Your Email Address - Welcome to TomDigitalSpace!');
+            $emailService->setSubject('Verify Your Email Address - Welcome to The Blessed Manifest!');
             $emailService->setMessage($emailContent);
             $emailService->setMailType('html');
             
@@ -108,7 +102,7 @@ class RegisterController extends BaseController
             $response = [
                 'success' => true,
                 'message' => 'Registration successful! Please check your email to verify your account.',
-                'redirect' => '/verification-sent?email=' . urlencode($emailaddress)
+                'redirect' => '/verification-sent'
             ];
         } else {
             $response = [
@@ -120,6 +114,9 @@ class RegisterController extends BaseController
         return $this->response->setJSON($response);
     }
     
+    /**
+     * Verify email with token
+     */
     public function verifyEmail()
     {
         $usersModel = new UsersModel();
@@ -131,9 +128,10 @@ class RegisterController extends BaseController
         
         if (!$user) {
             $data = [
-                'title' => 'Verification Failed',
+                'title' => 'Verification Failed - The Blessed Manifest',
                 'message' => 'Invalid verification link. The link may have been tampered with or already used.',
-                'type' => 'error'
+                'type' => 'error',
+                'activeMenu' => 'home'
             ];
             return view('pages/verification_status', $data);
         }
@@ -141,9 +139,10 @@ class RegisterController extends BaseController
         // Check if already verified
         if ($user['email_verified'] == 1) {
             $data = [
-                'title' => 'Already Verified',
+                'title' => 'Already Verified - The Blessed Manifest',
                 'message' => 'Your email has already been verified. You can now log in to your account.',
-                'type' => 'success'
+                'type' => 'success',
+                'activeMenu' => 'home'
             ];
             return view('pages/verification_status', $data);
         }
@@ -151,10 +150,11 @@ class RegisterController extends BaseController
         // Check if token has expired
         if (strtotime($user['token_expiry']) < time()) {
             $data = [
-                'title' => 'Verification Link Expired',
+                'title' => 'Verification Link Expired - The Blessed Manifest',
                 'message' => 'Your verification link has expired. Please request a new verification email below.',
                 'type' => 'expired',
-                'email' => $user['emailaddress']
+                'email' => $user['emailaddress'],
+                'activeMenu' => 'home'
             ];
             return view('pages/verification_status', $data);
         }
@@ -164,18 +164,22 @@ class RegisterController extends BaseController
             'email_verified' => 1,
             'verification_token' => null,
             'token_expiry' => null,
-            'status' => 'active'
+            'status' => 1
         ]);
         
         $data = [
-            'title' => 'Email Verified Successfully! 🎉',
-            'message' => 'Your email has been verified. You can now log in to your account and start exploring TomDigitalSpace.',
-            'type' => 'success'
+            'title' => 'Email Verified Successfully! - The Blessed Manifest',
+            'message' => 'Your email has been verified. You can now log in to your account and start exploring The Blessed Manifest.',
+            'type' => 'success',
+            'activeMenu' => 'home'
         ];
         
         return view('pages/verification_status', $data);
     }
     
+    /**
+     * Resend verification email
+     */
     public function resendVerification()
     {
         $usersModel = new UsersModel();
@@ -227,7 +231,7 @@ class RegisterController extends BaseController
         
         $emailService = \Config\Services::email();
         $emailService->setTo($email);
-        $emailService->setSubject('Resend: Verify Your Email Address - TomDigitalSpace');
+        $emailService->setSubject('Resend: Verify Your Email Address - The Blessed Manifest');
         $emailService->setMessage($emailContent);
         $emailService->setMailType('html');
         
@@ -245,9 +249,26 @@ class RegisterController extends BaseController
         }
     }
     
+    /**
+     * Verification sent page
+     */
+    public function verificationSent()
+    {
+        $data = [
+            'title' => 'Verification Email Sent - The Blessed Manifest',
+            'message' => 'Please check your email inbox and click the verification link to complete your registration.',
+            'type' => 'success',
+            'activeMenu' => 'home'
+        ];
+        return view('pages/verification_status', $data);
+    }
+    
+    /**
+     * Get verification email template
+     */
     private function getVerificationEmailTemplate($firstname, $lastname, $verificationLink)
     {
-        $siteName = 'TomDigitalSpace';
+        $siteName = 'The Blessed Manifest';
         $siteUrl = base_url();
         
         return '
@@ -258,7 +279,6 @@ class RegisterController extends BaseController
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Verify Your Email - ' . $siteName . '</title>
             <style>
-                /* Reset styles for email clients */
                 * {
                     margin: 0;
                     padding: 0;
@@ -286,9 +306,8 @@ class RegisterController extends BaseController
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
                 }
                 
-                /* Header Section */
                 .email-header {
-                    background: #0a2540;
+                    background: #3D204E;
                     padding: 40px 32px;
                     text-align: center;
                 }
@@ -317,12 +336,11 @@ class RegisterController extends BaseController
                 .accent-line {
                     width: 60px;
                     height: 3px;
-                    background: #0d6efd;
+                    background: #B48B5A;
                     margin: 20px auto 0 auto;
                     border-radius: 4px;
                 }
                 
-                /* Body Section */
                 .email-body {
                     padding: 40px 32px;
                     background: #ffffff;
@@ -331,7 +349,7 @@ class RegisterController extends BaseController
                 .greeting {
                     font-size: 24px;
                     font-weight: 700;
-                    color: #0a2540;
+                    color: #3D204E;
                     margin-bottom: 20px;
                 }
                 
@@ -343,11 +361,10 @@ class RegisterController extends BaseController
                 }
                 
                 .highlight {
-                    color: #0d6efd;
+                    color: #3D204E;
                     font-weight: 600;
                 }
                 
-                /* Button */
                 .button-container {
                     text-align: center;
                     margin: 32px 0;
@@ -355,7 +372,7 @@ class RegisterController extends BaseController
                 
                 .verify-button {
                     display: inline-block;
-                    background: #0d6efd;
+                    background: #3D204E;
                     color: #ffffff;
                     text-decoration: none;
                     padding: 14px 32px;
@@ -365,7 +382,10 @@ class RegisterController extends BaseController
                     text-align: center;
                 }
                 
-                /* Link Box */
+                .verify-button:hover {
+                    background: #5a2d73;
+                }
+                
                 .link-box {
                     background: #f8f9fa;
                     border: 1px solid #e9ecef;
@@ -383,13 +403,12 @@ class RegisterController extends BaseController
                 }
                 
                 .link-box a {
-                    color: #0d6efd;
+                    color: #3D204E;
                     text-decoration: none;
                     font-size: 12px;
                     word-break: break-all;
                 }
                 
-                /* Features Grid */
                 .features-grid {
                     display: block;
                     margin: 32px 0;
@@ -412,7 +431,7 @@ class RegisterController extends BaseController
                 
                 .feature-title {
                     font-weight: 700;
-                    color: #0a2540;
+                    color: #3D204E;
                     font-size: 14px;
                     margin-bottom: 4px;
                 }
@@ -423,10 +442,9 @@ class RegisterController extends BaseController
                     line-height: 1.4;
                 }
                 
-                /* Info Box */
                 .info-box {
                     background: #fff8e7;
-                    border-left: 3px solid #ffc107;
+                    border-left: 3px solid #B48B5A;
                     padding: 16px 20px;
                     border-radius: 12px;
                     margin: 24px 0;
@@ -439,7 +457,6 @@ class RegisterController extends BaseController
                     line-height: 1.5;
                 }
                 
-                /* Footer */
                 .email-footer {
                     background: #f8f9fa;
                     padding: 32px;
@@ -455,7 +472,7 @@ class RegisterController extends BaseController
                 }
                 
                 .email-footer a {
-                    color: #0d6efd;
+                    color: #3D204E;
                     text-decoration: none;
                 }
                 
@@ -472,7 +489,6 @@ class RegisterController extends BaseController
                     font-size: 12px;
                 }
                 
-                /* Responsive */
                 @media (max-width: 600px) {
                     .email-wrapper {
                         padding: 10px;
@@ -500,22 +516,20 @@ class RegisterController extends BaseController
         <body>
             <div class="email-wrapper">
                 <div class="email-container">
-                    <!-- Header -->
                     <div class="email-header">
-                        <div class="logo">✨ ' . $siteName . '</div>
+                        <div class="logo">✝️ ' . $siteName . '</div>
                         <h1>Verify Your Email Address</h1>
-                        <p class="tagline">Your gateway to digital innovation and tech resources</p>
+                        <p class="tagline">Your journey of faith and manifestation begins here</p>
                         <div class="accent-line"></div>
                     </div>
                     
-                    <!-- Body -->
                     <div class="email-body">
                         <div class="greeting">
-                            Hey ' . htmlspecialchars($firstname) . '! 👋
+                            Hello ' . htmlspecialchars($firstname) . '! 🙏
                         </div>
                         
                         <div class="message">
-                            Thanks for joining <span class="highlight">' . $siteName . '</span>! We\'re excited to have you in our community of developers, creators, and tech enthusiasts.
+                            Thanks for joining <span class="highlight">' . $siteName . '</span>! We\'re excited to have you in our faith-filled community.
                         </div>
                         
                         <div class="message">
@@ -535,24 +549,24 @@ class RegisterController extends BaseController
                         
                         <div class="features-grid">
                             <div class="feature-card">
-                                <div class="feature-icon">📦</div>
-                                <div class="feature-title">Premium Resources</div>
-                                <div class="feature-desc">Access exclusive digital products and templates</div>
+                                <div class="feature-icon">📖</div>
+                                <div class="feature-title">Daily Devotionals</div>
+                                <div class="feature-desc">Find hope and encouragement each day</div>
                             </div>
                             <div class="feature-card">
-                                <div class="feature-icon">📝</div>
-                                <div class="feature-title">Tech Insights</div>
-                                <div class="feature-desc">Get latest tutorials and coding tips</div>
+                                <div class="feature-icon">🎨</div>
+                                <div class="feature-title">Custom Designs</div>
+                                <div class="feature-desc">Bring your faith to life with personalized products</div>
                             </div>
                             <div class="feature-card">
-                                <div class="feature-icon">👥</div>
-                                <div class="feature-title">Community Access</div>
-                                <div class="feature-desc">Join our developer community</div>
+                                <div class="feature-icon">🙏</div>
+                                <div class="feature-title">Prayer Community</div>
+                                <div class="feature-desc">Connect with others in faith</div>
                             </div>
                             <div class="feature-card">
-                                <div class="feature-icon">🎁</div>
-                                <div class="feature-title">Exclusive Offers</div>
-                                <div class="feature-desc">Special discounts and early access</div>
+                                <div class="feature-icon">✨</div>
+                                <div class="feature-title">Inspiration</div>
+                                <div class="feature-desc">Stay motivated with faith-centered content</div>
                             </div>
                         </div>
                         
@@ -561,19 +575,18 @@ class RegisterController extends BaseController
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="email-footer">
                         <p>© ' . date('Y') . ' ' . $siteName . '. All rights reserved.</p>
-                        <p>Built with 💻 by developers, for developers</p>
+                        <p>Empowering you to bring your faith and vision to life</p>
                         <p>
-                            <a href="' . $siteUrl . '/privacy">Privacy Policy</a> &nbsp;|&nbsp;
-                            <a href="' . $siteUrl . '/terms">Terms of Service</a> &nbsp;|&nbsp;
+                            <a href="' . $siteUrl . '/privacy-policy">Privacy Policy</a> &nbsp;|&nbsp;
+                            <a href="' . $siteUrl . '/terms-and-conditions">Terms of Service</a> &nbsp;|&nbsp;
                             <a href="' . $siteUrl . '/contact">Contact Support</a>
                         </p>
                         <div class="social-links">
-                            <a href="#">🐦 Twitter</a>
-                            <a href="#">💻 GitHub</a>
-                            <a href="#">📧 Newsletter</a>
+                            <a href="#">📷 Instagram</a>
+                            <a href="#">📘 Facebook</a>
+                            <a href="#">✝️ Ministry</a>
                         </div>
                     </div>
                 </div>
@@ -582,10 +595,13 @@ class RegisterController extends BaseController
         </html>';
     }
     
+    /**
+     * Send admin notification for new registration
+     */
     private function sendAdminNotification($firstname, $lastname, $email)
     {
         $currentDateTime = date('F j, Y \a\t g:i A');
-        $siteName = 'TomDigitalSpace';
+        $siteName = 'The Blessed Manifest';
         $siteUrl = base_url();
         
         $content = '
@@ -620,7 +636,7 @@ class RegisterController extends BaseController
                 }
                 
                 .email-header {
-                    background: #0a2540;
+                    background: #3D204E;
                     padding: 32px 32px;
                     text-align: center;
                 }
@@ -644,7 +660,7 @@ class RegisterController extends BaseController
                 }
                 
                 .alert-badge {
-                    background: #0d6efd;
+                    background: #B48B5A;
                     color: #ffffff;
                     padding: 6px 16px;
                     border-radius: 50px;
@@ -657,7 +673,7 @@ class RegisterController extends BaseController
                 .section-title {
                     font-size: 18px;
                     font-weight: 700;
-                    color: #0a2540;
+                    color: #3D204E;
                     margin: 24px 0 16px;
                     padding-bottom: 8px;
                     border-bottom: 2px solid #e9ecef;
@@ -683,7 +699,7 @@ class RegisterController extends BaseController
                 
                 .user-label {
                     font-weight: 600;
-                    color: #0a2540;
+                    color: #3D204E;
                     width: 120px;
                     font-size: 13px;
                 }
@@ -704,32 +720,6 @@ class RegisterController extends BaseController
                     font-weight: 600;
                 }
                 
-                .stats-grid {
-                    display: block;
-                    margin: 16px 0;
-                }
-                
-                .stat-card {
-                    background: #f8f9fa;
-                    padding: 16px;
-                    border-radius: 16px;
-                    text-align: center;
-                    border: 1px solid #e9ecef;
-                    margin-bottom: 12px;
-                }
-                
-                .stat-number {
-                    font-size: 28px;
-                    font-weight: 700;
-                    color: #0d6efd;
-                    margin-bottom: 4px;
-                }
-                
-                .stat-label {
-                    font-size: 11px;
-                    color: #6c757d;
-                }
-                
                 .action-buttons {
                     margin: 24px 0;
                     text-align: center;
@@ -737,7 +727,7 @@ class RegisterController extends BaseController
                 
                 .btn-primary {
                     display: inline-block;
-                    background: #0d6efd;
+                    background: #3D204E;
                     color: #ffffff;
                     text-decoration: none;
                     padding: 10px 24px;
@@ -750,14 +740,14 @@ class RegisterController extends BaseController
                 .btn-secondary {
                     display: inline-block;
                     background: transparent;
-                    color: #0d6efd;
+                    color: #3D204E;
                     text-decoration: none;
                     padding: 10px 24px;
                     border-radius: 12px;
                     font-weight: 600;
                     font-size: 13px;
                     margin: 0 6px;
-                    border: 1px solid #0d6efd;
+                    border: 1px solid #3D204E;
                 }
                 
                 .info-note {
@@ -765,7 +755,7 @@ class RegisterController extends BaseController
                     border-radius: 16px;
                     padding: 16px;
                     margin: 24px 0;
-                    border-left: 3px solid #0d6efd;
+                    border-left: 3px solid #B48B5A;
                 }
                 
                 .info-note p {
@@ -840,7 +830,7 @@ class RegisterController extends BaseController
                         <div class="user-row">
                             <div class="user-label">Email Address:</div>
                             <div class="user-value">
-                                <a href="mailto:' . htmlspecialchars($email) . '" style="color: #0d6efd; text-decoration: none;">' . htmlspecialchars($email) . '</a>
+                                <a href="mailto:' . htmlspecialchars($email) . '" style="color: #3D204E; text-decoration: none;">' . htmlspecialchars($email) . '</a>
                             </div>
                         </div>
                         <div class="user-row">
@@ -856,31 +846,12 @@ class RegisterController extends BaseController
                     </div>
                     
                     <div class="section-title">
-                        📊 Registration Statistics
-                    </div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">' . $this->getTodayRegistrationsCount() . '</div>
-                            <div class="stat-label">Today\'s Registrations</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">' . $this->getPendingVerificationsCount() . '</div>
-                            <div class="stat-label">Pending Verifications</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">' . $this->getActiveUsersCount() . '</div>
-                            <div class="stat-label">Active Users</div>
-                        </div>
-                    </div>
-                    
-                    <div class="section-title">
                         ⚡ Quick Actions
                     </div>
                     
                     <div class="action-buttons">
-                        <a href="' . $siteUrl . '/admin/users?email=' . urlencode($email) . '" class="btn-primary">View Profile</a>
-                        <a href="mailto:' . htmlspecialchars($email) . '" class="btn-secondary">Contact User</a>
+                        <a href="mailto:' . htmlspecialchars($email) . '" class="btn-primary">Reply to User</a>
+                        <a href="' . $siteUrl . '/admin/dashboard" class="btn-secondary">Go to Admin Panel</a>
                     </div>
                     
                     <div class="info-note">
@@ -888,17 +859,12 @@ class RegisterController extends BaseController
                         <p>• This user has not yet verified their email address</p>
                         <p>• A verification link has been sent to the user\'s email</p>
                         <p>• Once verified, their status will automatically update to "Active"</p>
-                        <p style="margin-top: 10px;"><strong>🔔 Admin Actions:</strong></p>
-                        <p>✓ Monitor user activity for genuine registrations</p>
-                        <p>✓ Manually verify users from admin panel if needed</p>
-                        <p>✓ Send welcome emails to new verified users</p>
                     </div>
                 </div>
                 
                 <div class="email-footer">
                     <p>© ' . date('Y') . ' ' . $siteName . '. All rights reserved.</p>
                     <p>This is an automated notification from your website registration system.</p>
-                    <p><a href="' . $siteUrl . '/admin/dashboard" style="color: #0d6efd;">Go to Admin Dashboard →</a></p>
                 </div>
             </div>
         </body>
@@ -910,25 +876,5 @@ class RegisterController extends BaseController
         $emailService->setMessage($content);
         $emailService->setMailType('html');
         $emailService->send();
-    }
-
-    // Helper methods
-    private function getTodayRegistrationsCount()
-    {
-        $usersModel = new UsersModel();
-        $today = date('Y-m-d');
-        return $usersModel->where('DATE(created_at)', $today)->countAllResults();
-    }
-
-    private function getPendingVerificationsCount()
-    {
-        $usersModel = new UsersModel();
-        return $usersModel->where('email_verified', 0)->where('status', 'pending')->countAllResults();
-    }
-
-    private function getActiveUsersCount()
-    {
-        $usersModel = new UsersModel();
-        return $usersModel->where('email_verified', 1)->where('status', 'active')->countAllResults();
     }
 }

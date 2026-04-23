@@ -47,13 +47,29 @@
                                     <label for="slug">Slug <span class="text-danger">*</span></label>
                                     <input type="text" name="slug" id="slug" class="form-control" placeholder="URL-friendly title" value="<?= old('slug', $blog['slug']) ?>" required>
                                     <small class="form-text text-muted">URL-friendly version of the title.</small>
+                                    <div id="slugError" class="text-danger small mt-1" style="display: none;">Slug already exists. Please use a different slug.</div>
                                 </div>
 
-                                <!-- Description -->
+                                <!-- Description (Meta Description for SEO) -->
                                 <div class="form-group">
-                                    <label for="description">Description</label>
-                                    <textarea class="form-control" name="description" id="description" placeholder="Enter a short description" rows="3"><?= old('description', $blog['description']) ?></textarea>
-                                    <small class="form-text text-muted">A brief summary of the blog post (meta description).</small>
+                                    <label for="description">Meta Description <span class="text-muted">(SEO)</span></label>
+                                    <textarea class="form-control" name="description" id="description" placeholder="Enter meta description for SEO (150-160 characters recommended)" rows="2"><?= old('description', $blog['description']) ?></textarea>
+                                    <small class="form-text text-muted">Brief description for search engines. This serves as your meta description.</small>
+                                    <div class="character-count small text-muted mt-1"><span id="descCount"><?= strlen($blog['description'] ?? '') ?></span>/160 characters</div>
+                                </div>
+
+                                <!-- Excerpt -->
+                                <div class="form-group">
+                                    <label for="excerpt">Excerpt <span class="text-muted">(Short Summary)</span></label>
+                                    <textarea class="form-control" name="excerpt" id="excerpt" placeholder="Short summary displayed on blog listing pages" rows="2"><?= old('excerpt', $blog['excerpt']) ?></textarea>
+                                    <small class="form-text text-muted">Short summary displayed on blog listing pages. If empty, will use meta description.</small>
+                                </div>
+
+                                <!-- Meta Keywords -->
+                                <div class="form-group">
+                                    <label for="meta_keywords">Meta Keywords <span class="text-muted">(SEO)</span></label>
+                                    <input type="text" class="form-control" name="meta_keywords" id="meta_keywords" placeholder="keyword1, keyword2, keyword3" value="<?= old('meta_keywords', $blog['meta_keywords']) ?>">
+                                    <small class="form-text text-muted">Comma-separated keywords for SEO.</small>
                                 </div>
 
                                 <!-- Content (WYSIWYG) -->
@@ -88,6 +104,15 @@
                                     <label for="published_at">Publish Date</label>
                                     <input type="datetime-local" class="form-control" name="published_at" id="published_at" value="<?= $blog['published_at'] ? date('Y-m-d\TH:i', strtotime($blog['published_at'])) : '' ?>">
                                     <small class="form-text text-muted">Schedule when to publish this post.</small>
+                                </div>
+
+                                <!-- Featured Post -->
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="is_featured" name="is_featured" value="1" <?= ($blog['is_featured'] ?? 0) ? 'checked' : '' ?>>
+                                        <label class="custom-control-label" for="is_featured">Feature this post</label>
+                                    </div>
+                                    <small class="form-text text-muted">Featured posts appear prominently on the blog page.</small>
                                 </div>
                             </div>
                         </div>
@@ -124,14 +149,13 @@
                                 <h5 class="card-title mb-0"><i class="fa fa-image"></i> Featured Image</h5>
                             </div>
                             <div class="card-body">
-                                <!-- Blog Image Upload -->
                                 <div class="form-group">
                                     <label for="featured_image">Change Image</label>
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input" id="featured_image" name="featured_image" accept="image/png, image/gif, image/jpeg, image/webp">
                                         <label class="custom-file-label" for="featured_image">Choose file</label>
                                     </div>
-                                    <small class="form-text text-muted">Leave empty to keep current image. Max 2MB.</small>
+                                    <small class="form-text text-muted">Leave empty to keep current image. Max 2MB. Supported: JPG, PNG, GIF, WEBP.</small>
                                     <div id="imagePreview" class="mt-2">
                                         <?php if($blog['featured_image']): ?>
                                             <img src="<?= base_url($blog['featured_image']) ?>" class="img-fluid rounded" alt="Current Image" style="max-height: 150px;">
@@ -153,7 +177,7 @@
                                         data-role="tagsinput" 
                                         data-placeholder=""
                                         value="<?= old('tags', $blog['tags']) ?>">
-                                    <small class="form-text text-muted">Type a tag and press Enter to add.</small>
+                                    <small class="form-text text-muted">Type a tag and press Enter to add. Separate multiple tags with commas.</small>
                                 </div>
                             </div>
                         </div>
@@ -161,7 +185,7 @@
                         <!-- Action Buttons -->
                         <div class="card shadow-sm">
                             <div class="card-body">
-                                <button type="submit" class="btn btn-primary btn-block">
+                                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                                     <i class="fa fa-save"></i> Update Blog
                                 </button>
                                 <a href="/admin/blogmasterlist" class="btn btn-secondary btn-block mt-2">

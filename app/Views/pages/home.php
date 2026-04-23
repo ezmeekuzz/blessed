@@ -12,7 +12,7 @@
                 <P class="lead fs-5">- Psalm 119:15-16</P>
             </div>
             <div class="col-lg-7">
-                <img src="images/hero-bg.png" class="img-fluid rounded-4">
+                <img src="<?= base_url('images/hero-bg.png') ?>" class="img-fluid rounded-4">
             </div>
         </div>
     </div>
@@ -56,7 +56,7 @@
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <img src="images/vision-bg.png" class="img-fluid rounded-4">
+                <img src="<?= base_url('images/vision-bg.png') ?>" class="img-fluid rounded-4">
             </div>
             <div class="col-lg-6">
                 <h2 class="display-5 fw-semibold">
@@ -88,7 +88,7 @@
             
     <!-- Full width image outside container -->
     <div class="container-fluid p-0">
-        <img src="images/featured-items-bg.png" alt="Featured items collage" class="w-100" style="display: block;">
+        <img src="<?= base_url('images/featured-items-bg.png') ?>" alt="Featured items collage" class="w-100" style="display: block;">
     </div>
 </section>
 
@@ -133,49 +133,56 @@
                 
         <!-- Posts Grid -->
         <div class="row g-4">
-            <!-- Post 1 - Multi-line title like the image -->
-            <div class="col-lg-4 col-md-6">
-                <div class="post-card h-100 rounded-4" style="background-image: url('images/hero-bg.png');">
-                    <div class="post-content p-4 d-flex flex-column h-100 justify-content-end">
-                        <div class="post-meta">
-                            <span class="read-time text-white">
-                                <i class="far fa-clock me-2"></i>12 Mins Read
-                            </span>
-                            <a href="#" class="fs-5 text-decoration-none text-white"><span class="post-title">Radiate | Devotions to Reflect the Heart of Jesus</span></a>
+            <?php if (!empty($featuredPosts)): ?>
+                <?php foreach ($featuredPosts as $post): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="post-card h-100 rounded-4" style="background-image: url('<?= base_url($post['featured_image'] ?? 'images/hero-bg.png') ?>'); background-size: cover; background-position: center;">
+                            <div class="post-content p-4 d-flex flex-column h-100 justify-content-end">
+                                <div class="post-meta">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="read-time text-white">
+                                            <i class="far fa-clock me-2"></i><?= $post['read_time'] ?? 5 ?> min read
+                                        </span>
+                                        <?php if (!empty($post['categoryname'])): ?>
+                                            <span class="category-badge text-white" style="background: rgba(61, 32, 78, 0.8); padding: 2px 8px; border-radius: 20px; font-size: 0.7rem;">
+                                                <?= esc($post['categoryname']) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <a href="/blogs/<?= $post['slug'] ?>" class="fs-5 text-decoration-none text-white">
+                                        <span class="post-title"><?= esc($post['title']) ?></span>
+                                    </a>
+                                    <div class="post-date text-white-50 mt-2">
+                                        <i class="far fa-calendar-alt me-2"></i><?= date('F j, Y', strtotime($post['published_at'])) ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Fallback static posts if no featured posts exist -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="post-card h-100 rounded-4" style="background-image: url('<?= base_url('images/hero-bg.png') ?>');">
+                        <div class="post-content p-4 d-flex flex-column h-100 justify-content-end">
+                            <div class="post-meta">
+                                <span class="read-time text-white">
+                                    <i class="far fa-clock me-2"></i>Coming Soon
+                                </span>
+                                <a href="#" class="fs-5 text-decoration-none text-white">
+                                    <span class="post-title">Check back soon for new blog posts</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="post-card h-100 rounded-4" style="background-image: url('images/hero-bg.png');">
-                    <div class="post-content p-4 d-flex flex-column h-100 justify-content-end">
-                        <div class="post-meta">
-                            <span class="read-time text-white">
-                                <i class="far fa-clock me-2"></i>12 Mins Read
-                            </span>
-                            <a href="#" class="fs-5 text-decoration-none text-white"><span class="post-title">Radiate | Devotions to Reflect the Heart of Jesus</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="post-card h-100 rounded-4" style="background-image: url('images/hero-bg.png');">
-                    <div class="post-content p-4 d-flex flex-column h-100 justify-content-end">
-                        <div class="post-meta">
-                            <span class="read-time text-white">
-                                <i class="far fa-clock me-2"></i>12 Mins Read
-                            </span>
-                            <a href="#" class="fs-5 text-decoration-none text-white"><span class="post-title">Radiate | Devotions to Reflect the Heart of Jesus</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
                 
         <!-- View All Link -->
         <div class="row mt-5">
             <div class="col-12 text-center">
-                <a href="#all-posts" class="view-all-link">
+                <a href="/blogs" class="view-all-link">
                     View All Posts <i class="fas fa-arrow-right ms-2"></i>
                 </a>
             </div>
@@ -183,52 +190,4 @@
     </div>
 </section>
 
-<section class="instagram-products py-5">
-    <div class="container">
-        <div class="row mb-4">
-            <div class="col-6">
-                <h2 class="display-6 fw-bold mb-4" style="color: #3D204E;">Check Out Our Products On Instagram</h2>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-5">
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-1.png" alt="Product 1" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-2.png" alt="Product 2" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-3.png" alt="Product 3" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="position-relative overflow-hidden rounded-4 shadow-sm hover-effect" style="aspect-ratio: 1/1;">
-                    <img src="images/instagram-product-4.png" alt="Product 4" class="w-100 h-100 object-fit-cover">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 100%);"></div>
-                    <div class="position-absolute top-50 start-50 translate-middle">
-                        <i class="bi bi-instagram text-white fs-2 p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); width: 60px; height: 60px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 <?=$this->include('templates/footer');?>

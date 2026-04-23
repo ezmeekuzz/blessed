@@ -30,7 +30,7 @@ class AddBlogController extends SessionController
         
         // Validation rules
         $rules = [
-            'title' => 'required|min_length[3]',
+            'title' => 'required|min_length[3]|max_length[255]',
             'slug' => 'required|is_unique[blog_posts.slug]',
             'blog_category_id' => 'required|is_not_unique[blog_categories.blog_category_id]',
             'content' => 'required',
@@ -53,16 +53,21 @@ class AddBlogController extends SessionController
         // Handle file upload
         $featuredImage = $this->uploadFeaturedImage();
         
-        // Prepare data with all fields
+        // Prepare data with all fields including new ones
         $data = [
             'title' => $this->request->getPost('title'),
             'slug' => $this->request->getPost('slug'),
             'description' => $this->request->getPost('description'),
+            'excerpt' => $this->request->getPost('excerpt'),
             'blog_category_id' => $this->request->getPost('blog_category_id'),
             'featured_image' => $featuredImage,
             'tags' => $this->request->getPost('tags'),
             'status' => $this->request->getPost('status'),
-            'content' => $this->request->getPost('content')
+            'content' => $this->request->getPost('content'),
+            'meta_keywords' => $this->request->getPost('meta_keywords'),
+            'is_featured' => $this->request->getPost('is_featured') ? 1 : 0,
+            'author_id' => session()->get('admin_user_id') ? session()->get('admin_user_id') : NULL,
+            'view_count' => 0 // Initialize view count
         ];
         
         // Handle published_at
@@ -116,8 +121,20 @@ class AddBlogController extends SessionController
     public function categoryList()
     {
         $categoryModel = new BlogCategoriesModel();
-        $categories = $categoryModel->orderBy('categoryname', 'ASC')->findAll();
+        $categories = $categoryModel->where('status', 'active')->orderBy('categoryname', 'ASC')->findAll();
         
         return $this->response->setJSON($categories);
+    }
+    
+    public function checkSlug()
+    {
+        $slug = $this->request->getPost('slug');
+        $blogModel = new BlogPostsModel();
+        
+        $exists = $blogModel->where('slug', $slug)->first();
+        
+        return $this->response->setJSON([
+            'exists' => !empty($exists)
+        ]);
     }
 }

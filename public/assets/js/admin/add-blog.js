@@ -1,4 +1,4 @@
-// add-blog.js - Updated with AJAX submission similar to addportfolio.js
+// add-blog.js - Complete updated version with all fields
 
 $(document).ready(function () {
     // Summernote initialization
@@ -10,24 +10,73 @@ $(document).ready(function () {
                 ['fontsize', ['fontsize']],
                 ['color', ['color']],
                 ['para', ['ul', 'ol', 'paragraph']],
-                ['insert', ['picture', 'hr']],
-                ['view', ['codeview']]
+                ['insert', ['picture', 'link', 'hr']],
+                ['view', ['codeview', 'fullscreen']]
             ],
             tabsize: 2,
-            height: 200
+            height: 300,
+            placeholder: 'Write your blog content here...'
         });
     }
     
-    // Auto-generate slug from title
-    $('#title').on('input', function() {
-        let title = $(this).val();
-        let slug = title.toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-        $('#slug').val(slug);
+    // Character count for meta description
+    $('#description').on('input', function() {
+        let count = $(this).val().length;
+        $('#descCount').text(count);
+        if (count > 160) {
+            $('#descCount').addClass('text-danger').removeClass('text-muted');
+        } else {
+            $('#descCount').removeClass('text-danger').addClass('text-muted');
+        }
     });
+    
+    // Trigger initial count
+    $('#description').trigger('input');
+    
+    // Auto-generate slug from title
+    let isSlugManuallyEdited = false;
+    
+    $('#title').on('input', function() {
+        if (!isSlugManuallyEdited) {
+            let title = $(this).val();
+            let slug = title.toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+            $('#slug').val(slug);
+            checkSlugUniqueness(slug);
+        }
+    });
+    
+    $('#slug').on('input', function() {
+        isSlugManuallyEdited = true;
+        let slug = $(this).val();
+        checkSlugUniqueness(slug);
+    });
+    
+    function checkSlugUniqueness(slug) {
+        if (slug.length < 3) return;
+        
+        $.ajax({
+            url: '/admin/addblog/checkSlug',
+            type: 'POST',
+            data: { slug: slug },
+            dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.exists) {
+                    $('#slugError').show();
+                    $('#slug').addClass('is-invalid');
+                } else {
+                    $('#slugError').hide();
+                    $('#slug').removeClass('is-invalid');
+                }
+            }
+        });
+    }
     
     // Filter categories function
     window.filterCategories = function() {
@@ -62,6 +111,19 @@ $(document).ready(function () {
         let previewImg = preview.find('img');
         
         if (file && file.type.startsWith('image/')) {
+            // Validate file size (2MB max)
+            if (file.size > 2 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'Image size should not exceed 2MB.'
+                });
+                $(this).val('');
+                $(this).next('.custom-file-label').text('Choose file');
+                preview.hide();
+                return;
+            }
+            
             let reader = new FileReader();
             reader.onload = function(e) {
                 previewImg.attr('src', e.target.result);
@@ -73,6 +135,15 @@ $(document).ready(function () {
             previewImg.attr('src', '');
         }
     });
+    
+    // Tags input initialization
+    if ($.fn.tagsinput) {
+        $('#tags').tagsinput({
+            trimValue: true,
+            confirmKeys: [13, 44],
+            tagClass: 'badge badge-primary m-1'
+        });
+    }
     
     // Fetch categories
     fetchCategories();
@@ -124,10 +195,16 @@ $(document).ready(function () {
     $('#addblog').submit(function(event) {
         event.preventDefault();
         
-        // Get Summernote content if Summernote is used
+        // Get Summernote content
         if ($('#content').summernote) {
             let content = $('#content').summernote('code');
             $('#content').val(content);
+        }
+        
+        // Get tags value
+        if ($('#tags').tagsinput) {
+            let tags = $('#tags').tagsinput('items');
+            $('#tags').val(tags.join(','));
         }
         
         // Basic validation
@@ -136,12 +213,23 @@ $(document).ready(function () {
         let blog_category_id = $('#blog_category_id').val() || '';
         let content = $('#content').val() || '';
         
-        if (title.trim() === '' || slug.trim() === '' || blog_category_id.trim() === '' || content.trim() === '') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Title, Slug, Category and Content are required.',
-            });
+        if (title.trim() === '') {
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Title is required.' });
+            return;
+        }
+        
+        if (slug.trim() === '') {
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Slug is required.' });
+            return;
+        }
+        
+        if (blog_category_id.trim() === '') {
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please select a category.' });
+            return;
+        }
+        
+        if (content.trim() === '' || content === '<p><br></p>') {
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Content is required.' });
             return;
         }
         
@@ -155,6 +243,7 @@ $(document).ready(function () {
             contentType: false,
             dataType: 'json',
             beforeSend: function() {
+                $('#submitBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
                 Swal.fire({
                     title: 'Saving Blog Post...',
                     allowOutsideClick: false,
@@ -165,6 +254,8 @@ $(document).ready(function () {
             },
             success: function(response) {
                 Swal.close();
+                $('#submitBtn').prop('disabled', false).html('<i class="fa fa-save"></i> Publish Blog');
+                
                 if (response.success) {
                     // Reset form
                     $('#addblog')[0].reset();
@@ -188,6 +279,9 @@ $(document).ready(function () {
                     $('#blog_category_id').val('');
                     $('#categorylist li').removeClass('active bg-primary text-white');
                     
+                    // Reset slug manual edit flag
+                    isSlugManuallyEdited = false;
+                    
                     // Show success message
                     Swal.fire({
                         icon: 'success',
@@ -196,12 +290,10 @@ $(document).ready(function () {
                         confirmButtonText: 'OK'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Optionally redirect or stay on page
                             window.location.href = '/admin/add-blog';
                         }
                     });
                 } else {
-                    // Show error message from server
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -211,13 +303,19 @@ $(document).ready(function () {
             },
             error: function(xhr) {
                 Swal.close();
+                $('#submitBtn').prop('disabled', false).html('<i class="fa fa-save"></i> Publish Blog');
+                
                 let errorMessage = 'An unexpected error occurred. Please try again later.';
                 
-                // Try to parse error response
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
                 } else if (xhr.responseText) {
-                    errorMessage = xhr.responseText;
+                    try {
+                        let response = JSON.parse(xhr.responseText);
+                        errorMessage = response.message || errorMessage;
+                    } catch(e) {
+                        errorMessage = xhr.responseText;
+                    }
                 }
                 
                 Swal.fire({

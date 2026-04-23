@@ -1,11 +1,11 @@
 <?=$this->include('templates/admin/header');?>
-<!-- Add this CSS in your head section or in your existing stylesheet -->
+
 <style>
     /* Fix for tags column */
     .table-bordered td:nth-child(3),
     .table-bordered th:nth-child(3) {
-        width: 20% !important;
-        max-width: 200px;
+        width: 18% !important;
+        max-width: 180px;
         min-width: 150px;
     }
     
@@ -46,13 +46,32 @@
     }
     
     /* Column widths */
-    #blogmasterlist th:nth-child(1) { width: 30%; } /* Title */
-    #blogmasterlist th:nth-child(2) { width: 15%; } /* Category */
-    #blogmasterlist th:nth-child(3) { width: 20%; } /* Tags */
-    #blogmasterlist th:nth-child(4) { width: 10%; } /* Status */
-    #blogmasterlist th:nth-child(5) { width: 15%; } /* Date Published */
-    #blogmasterlist th:nth-child(6) { width: 10%; } /* Actions */
+    #blogmasterlist th:nth-child(1) { width: 25%; } /* Title */
+    #blogmasterlist th:nth-child(2) { width: 12%; } /* Category */
+    #blogmasterlist th:nth-child(3) { width: 18%; } /* Tags */
+    #blogmasterlist th:nth-child(4) { width: 8%; } /* Views */
+    #blogmasterlist th:nth-child(5) { width: 10%; } /* Status */
+    #blogmasterlist th:nth-child(6) { width: 12%; } /* Date Published */
+    #blogmasterlist th:nth-child(7) { width: 10%; } /* Featured */
+    #blogmasterlist th:nth-child(8) { width: 5%; } /* Actions */
+    
+    /* View count styling */
+    .view-count {
+        font-weight: 600;
+        color: #3D204E;
+    }
+    
+    /* Featured star styling */
+    .featured-star {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .featured-star:hover {
+        transform: scale(1.2);
+    }
 </style>
+
 <div class="app-container">
     <?=$this->include('templates/admin/sidebar');?>
     <div class="app-main" id="main">
@@ -84,7 +103,12 @@
                     <div class="card card-statistics">
                         <div class="card-header d-flex align-items-center">
                             <div class="card-heading">
-                                <h4 class="card-title"><i class="fas fa-blog"></i> Blogs</h4>
+                                <h4 class="card-title"><i class="fas fa-blog"></i> Blog Posts</h4>
+                            </div>
+                            <div class="ml-auto">
+                                <a href="/admin/add-blog" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Add New Blog
+                                </a>
                             </div>
                         </div>
                         <div class="card-body">
@@ -94,9 +118,11 @@
                                         <tr>
                                             <th>Title</th>
                                             <th>Category</th>
-                                            <th style="width: 20% !important;">Tags</th>
+                                            <th>Tags</th>
+                                            <th>Views</th>
                                             <th>Status</th>
                                             <th>Date Published</th>
+                                            <th>Featured</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>

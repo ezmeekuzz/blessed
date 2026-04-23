@@ -6,6 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'HomeController::index');
+$routes->get('/home', 'HomeController::index');
 $routes->get('/login', 'LoginController::index');
 $routes->post('/login/authenticate', 'LoginController::authenticate');
 $routes->get('/logout', 'LogoutController::index');
@@ -23,16 +24,35 @@ $routes->get('/verification-sent', function() {
 });
 $routes->get('/about-us', 'AboutUsController::index');
 $routes->get('/contact-us', 'ContactUsController::index');
+$routes->post('/contact/submit', 'ContactUsController::submit');
 $routes->get('/faq', 'FAQController::index');
 $routes->get('/privacy-policy', 'PrivacyPolicyController::index');
 $routes->get('/how-to', 'HowToController::index');
 $routes->get('/thank-you', 'ThankYouController::index');
 $routes->get('/products', 'ProductsController::index');
+$routes->get('/products/filter', 'ProductsController::filterByCategory');
+$routes->get('/products/search', 'ProductsController::search');
+$routes->get('/product/(:any)', 'ProductDetailsController::index/$1');
+$routes->get('/product-details/variations', 'ProductDetailsController::getVariations');
+$routes->post('/product-details/add-to-cart', 'ProductDetailsController::addToCart');
+$routes->get('/blogs/get-categories', 'BlogsController::getCategoriesAjax');
+$routes->get('/blogs/get-posts', 'BlogsController::getPosts');
 $routes->get('/blogs', 'BlogsController::index');
-$routes->get('/blog-details', 'BlogDetailsController::index');
+$routes->get('/blogs/(:any)', 'BlogDetailsController::index/$1');
+$routes->post('/newsletter/subscribe', 'NewsletterController::subscribe');
 $routes->get('/check-out', 'CheckOutController::index');
 $routes->get('/payment', 'PaymentController::index');
-$routes->get('/product-details', 'ProductDetailsController::index');
+$routes->get('/terms-and-conditions', 'TermsAndConditionsController::index');
+$routes->get('/exchange-and-refund-policy', 'ExchangeAndRefundPolicyController::index');
+$routes->get('/shipping-policy', 'ShippingPolicyController::index');
+
+//Customer Routes
+$routes->get('/profile', 'ProfileController::index');
+$routes->post('/profile/update', 'ProfileController::update');
+$routes->post('/profile/change-password', 'ProfileController::changePassword');
+$routes->get('/orders', 'OrdersController::index');
+$routes->get('/dashboard', 'DashboardController::index');
+$routes->get('/wishlist', 'WishlistController::index');
 
 //Admin Routes
 $routes->get('/admin/login', 'Admin\LoginController::index');
@@ -56,6 +76,7 @@ $routes->delete('/admin/blogmasterlist/delete/(:num)', 'Admin\BlogMasterlistCont
 $routes->post('/admin/blogmasterlist/updateStatus/(:num)', 'Admin\BlogMasterlistController::updateStatus/$1');
 $routes->get('/admin/blogmasterlist/getCategories', 'Admin\BlogMasterlistController::getCategories');
 $routes->get('/admin/blogmasterlist/getBlog/(:num)', 'Admin\BlogMasterlistController::getBlog/$1');
+$routes->post('/admin/blogmasterlist/toggleFeatured/(:num)', 'Admin\BlogMasterlistController::toggleFeatured/$1');
 $routes->get('/admin/edit-blog/(:num)', 'Admin\EditBlogController::index/$1');
 $routes->post('/admin/editblog/update/(:num)', 'Admin\EditBlogController::update/$1');
 $routes->get('/admin/editblog/getCategories', 'Admin\EditBlogController::getCategories');

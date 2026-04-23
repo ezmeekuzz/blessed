@@ -7,7 +7,7 @@
     <meta name="description" content="We have on-site capabilities to tweak as needed or to aid in assembly. These services can also be quoted a la' carte for your existing parts. Contact us for details." />
     <meta content="Rustom Codilan" name="author" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="icon" href="<?=base_url();?>images/logo.png" type="image/x-icon">
+    <link rel="icon" href="<?=base_url();?>images/favicon.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
                     <div class="navbar-header d-flex align-items-center">
                         <a href="javascript:void:(0)" class="mobile-toggle"><i class="ti ti-align-right"></i></a>
                         <a class="navbar-brand" href="/">
-                            <img src="<?=base_url();?>images/logo.png" class="img-fluid logo-desktop"  alt="logo" style="width: 90px;" />
+                            <img src="<?=base_url();?>images/logo.png" class="img-fluid logo-desktop"  alt="logo" />
                             <img src="<?=base_url();?>images/logo.png" class="img-fluid logo-mobile" alt="logo" />
                         </a>
                     </div>

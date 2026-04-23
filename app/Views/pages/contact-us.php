@@ -62,3 +62,4 @@
     </div>
 </section>
 <?=$this->include('templates/footer');?>
+<script src="<?=base_url();?>js/contact-us.js"></script>
