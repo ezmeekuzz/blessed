@@ -4,14 +4,8 @@ let currentLayout = {
 
 let draggedRowIndex = null;
 let draggedCell = null;
-let templateId = $('#templateId').val();
 
 $(document).ready(function() {
-    
-    // Load existing template data
-    if (templateId) {
-        loadTemplateData();
-    }
     
     // Add Row
     $('#addRowBtn').on('click', function() {
@@ -28,7 +22,7 @@ $(document).ready(function() {
     $('#clearAllBtn').on('click', function() {
         Swal.fire({
             title: 'Clear All?',
-            text: 'This will remove all rows from your layout.',
+            text: 'This will remove all rows.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -45,23 +39,12 @@ $(document).ready(function() {
     
     // Preset selection
     $('.preset-card').on('click', function() {
-        Swal.fire({
-            title: 'Replace Layout?',
-            text: 'This will replace your current layout. Are you sure?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3D204E',
-            confirmButtonText: 'Yes, replace it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $('.preset-card').removeClass('selected');
-                $(this).addClass('selected');
-                
-                let preset = $(this).data('preset');
-                loadPreset(preset);
-                showToast('Preset loaded', 'success');
-            }
-        });
+        $('.preset-card').removeClass('selected');
+        $(this).addClass('selected');
+        
+        let preset = $(this).data('preset');
+        loadPreset(preset);
+        showToast('Preset loaded', 'success');
     });
     
     // Format JSON
@@ -81,39 +64,6 @@ $(document).ready(function() {
     $('#layoutJson').on('change blur', function() {
         loadLayoutFromJson();
     });
-    
-    // Load template data from server
-    function loadTemplateData() {
-        $.ajax({
-            url: '/admin/edit-template/getTemplateData/' + templateId,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success && response.data) {
-                    try {
-                        let layoutData = response.data.layout_json;
-                        // Clean up JSON if it has HTML entities
-                        if (typeof layoutData === 'string') {
-                            layoutData = layoutData.replace(/&quot;/g, '"');
-                            currentLayout = JSON.parse(layoutData);
-                        } else {
-                            currentLayout = layoutData;
-                        }
-                        updateJsonFromLayout();
-                        renderGridPreview();
-                    } catch(e) {
-                        console.error('Error parsing layout:', e);
-                        showError('Error loading template layout. The JSON may be corrupted.');
-                    }
-                } else {
-                    showError('Failed to load template data');
-                }
-            },
-            error: function() {
-                showError('Error loading template. Please refresh the page.');
-            }
-        });
-    }
     
     // Load preset layouts
     function loadPreset(preset) {
@@ -163,26 +113,22 @@ $(document).ready(function() {
     // Update JSON
     function updateJsonFromLayout() {
         $('#layoutJson').val(JSON.stringify(currentLayout, null, 2));
-        $('#layoutJson').removeClass('json-error');
     }
     
     // Load from JSON
     function loadLayoutFromJson() {
         try {
             let json = $('#layoutJson').val();
-            if (json && json.trim()) {
+            if (json.trim()) {
                 let parsed = JSON.parse(json);
                 if (parsed.rows && Array.isArray(parsed.rows)) {
                     currentLayout = parsed;
                     renderGridPreview();
                     $('#layoutJson').removeClass('json-error');
-                } else {
-                    throw new Error('Invalid structure: missing rows array');
                 }
             }
         } catch(e) {
             $('#layoutJson').addClass('json-error');
-            console.error('JSON parse error:', e);
         }
     }
     
@@ -240,9 +186,6 @@ $(document).ready(function() {
                         <button type="button" class="btn btn-xs btn-outline-danger remove-row" data-row="${rowIndex}">
                             <i class="fas fa-trash"></i> Remove
                         </button>
-                        <button type="button" class="btn btn-xs btn-outline-secondary duplicate-row" data-row="${rowIndex}" title="Duplicate Row">
-                            <i class="fas fa-copy"></i>
-                        </button>
                         <span class="drag-handle" title="Drag to reorder">
                             <i class="fas fa-grip-vertical"></i> Drag
                         </span>
@@ -272,12 +215,6 @@ $(document).ready(function() {
             removeRow(rowIndex);
         });
         
-        $('.duplicate-row').on('click', function(e) {
-            e.stopPropagation();
-            let rowIndex = parseInt($(this).data('row'));
-            duplicateRow(rowIndex);
-        });
-        
         $('.adjust-width').on('click', function(e) {
             e.stopPropagation();
             let rowIndex = parseInt($(this).data('row'));
@@ -285,16 +222,6 @@ $(document).ready(function() {
             let currentWidth = parseInt($(this).data('current'));
             adjustColumnWidth(rowIndex, colIndex, currentWidth);
         });
-    }
-    
-    // Duplicate row
-    function duplicateRow(rowIndex) {
-        let originalRow = currentLayout.rows[rowIndex];
-        let duplicatedRow = JSON.parse(JSON.stringify(originalRow));
-        currentLayout.rows.splice(rowIndex + 1, 0, duplicatedRow);
-        updateJsonFromLayout();
-        renderGridPreview();
-        showToast('Row duplicated', 'success');
     }
     
     // Initialize drag and drop for rows
@@ -375,7 +302,7 @@ $(document).ready(function() {
     function removeRow(rowIndex) {
         Swal.fire({
             title: 'Remove Row?',
-            text: 'Are you sure you want to remove this row?',
+            text: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -388,7 +315,7 @@ $(document).ready(function() {
                     renderGridPreview();
                     showToast('Row removed', 'success');
                 } else {
-                    showError('Cannot remove the last row. Clear the layout instead.');
+                    showError('Cannot remove the last row.');
                 }
             }
         });
@@ -479,7 +406,7 @@ $(document).ready(function() {
     }
     
     // Form submission
-    $('#editTemplateForm').on('submit', function(e) {
+    $('#addTemplateForm').on('submit', function(e) {
         e.preventDefault();
         
         let templateName = $('#templateName').val().trim();
@@ -498,17 +425,17 @@ $(document).ready(function() {
         try {
             JSON.parse(layoutJson);
         } catch(e) {
-            showError('Invalid JSON format. Please check your layout JSON.');
+            showError('Invalid JSON format.');
             return;
         }
         
         let submitBtn = $('#submitBtn');
         let originalText = submitBtn.html();
         submitBtn.prop('disabled', true);
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
         
         $.ajax({
-            url: '/admin/edit-template/update/' + templateId,
+            url: '/admin/addgridtemplate/insert',
             type: 'POST',
             data: {
                 name: templateName,
@@ -523,26 +450,24 @@ $(document).ready(function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: 'Template updated successfully.',
+                        text: 'Template saved successfully.',
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        window.location.href = response.redirect || '/admin/templates-masterlist';
+                        window.location.href = response.redirect || '/admin/grid-templates-masterlist';
                     });
                 } else {
-                    showError(response.message || 'Failed to update template.');
+                    showError(response.message || 'Failed to save.');
                 }
             },
-            error: function(xhr) {
+            error: function() {
                 submitBtn.prop('disabled', false);
                 submitBtn.html(originalText);
-                
-                let errorMsg = 'An error occurred. Please try again.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                showError(errorMsg);
+                showError('An error occurred. Please try again.');
             }
         });
     });
+    
+    // Initialize with default preset
+    loadPreset('3-col');
 });

@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\GridTemplatesModel;
 use Hermawan\DataTables\DataTable;
 
-class TemplatesMasterlistController extends SessionController
+class GridTemplatesMasterlistController extends SessionController
 {
     protected $db;
     
@@ -25,9 +25,9 @@ class TemplatesMasterlistController extends SessionController
         
         $data = [
             'title' => 'The Blessed Manifest | Templates Masterlist',
-            'activeMenu' => 'templates'
+            'activeMenu' => 'gridtemplates'
         ];
-        return view('pages/admin/templates-masterlist', $data);
+        return view('pages/admin/grid-templates-masterlist', $data);
     }
     
     public function getData()

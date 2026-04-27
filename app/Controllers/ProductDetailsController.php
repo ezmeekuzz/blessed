@@ -11,21 +11,9 @@ use App\Models\ColorsModel;
 
 class ProductDetailsController extends BaseController
 {
-    /**
-     * Display product details page
-     * @param string $slug Product slug
-     */
     public function index($slug = null)
     {
-        if (!$slug) {
-            return redirect()->to('/products');
-        }
-
         $productsModel = new ProductsModel();
-        $imagesModel = new ProductImagesModel();
-        $categoriesModel = new ProductCategoriesModel();
-        $sizesModel = new SizesModel();
-        $colorsModel = new ColorsModel();
 
         $product = $productsModel
             ->select('products.*, product_categories.categoryname')
@@ -33,367 +21,350 @@ class ProductDetailsController extends BaseController
             ->where('products.slug', $slug)
             ->first();
 
-        if (!$product) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Product not found');
-        }
-
-        // Get product images
-        $productImages = $imagesModel
-            ->where('product_id', $product['product_id'])
-            ->findAll();
-        $images = array_column($productImages, 'file_path');
-
-        // If no images found, use placeholder
-        if (empty($images)) {
-            $images = ['images/placeholder-product.png'];
-        }
-
-        // Get sizes with pricing
-        $sizes = $sizesModel
-            ->where('product_id', $product['product_id'])
-            ->orderBy('CAST(size AS UNSIGNED)', 'ASC')
-            ->findAll();
-        
-        // Calculate final prices for each size
-        foreach ($sizes as &$size) {
-            $size['final_price'] = (float)$size['price'];
-            $size['discount_label'] = null;
-            $size['discount_amount_saved'] = 0;
-
-            if ($size['discount_type'] == 'percentage' && $size['discount_percentage'] > 0) {
-                $size['discount_amount_saved'] = $size['price'] * $size['discount_percentage'] / 100;
-                $size['final_price'] = $size['price'] - $size['discount_amount_saved'];
-                $size['discount_label'] = $size['discount_percentage'] . '% OFF';
-            } elseif ($size['discount_type'] == 'fixed' && $size['discount_amount'] > 0) {
-                $size['discount_amount_saved'] = $size['discount_amount'];
-                $size['final_price'] = $size['price'] - $size['discount_amount'];
-                $size['discount_label'] = '$' . number_format($size['discount_amount'], 2) . ' OFF';
-            }
-
-            $size['final_price'] = max(0, (float)$size['final_price']);
-            $size['price'] = (float)$size['price'];
-        }
-
-        // Get colors with images
-        $colors = $colorsModel
-            ->where('product_id', $product['product_id'])
-            ->orderBy('is_default', 'DESC')
-            ->findAll();
-
-        // Get default size and color
-        $defaultSize = null;
-        $defaultColor = null;
-        
-        foreach ($sizes as $size) {
-            if ($size['is_default'] == 1) {
-                $defaultSize = $size;
-                break;
-            }
-        }
-        
-        foreach ($colors as $color) {
-            if ($color['is_default'] == 1) {
-                $defaultColor = $color;
-                break;
-            }
-        }
-        
-        // If no default, use first item
-        if (!$defaultSize && !empty($sizes)) {
-            $defaultSize = $sizes[0];
-        }
-        if (!$defaultColor && !empty($colors)) {
-            $defaultColor = $colors[0];
-        }
-
-        // Get default price from default size
-        $defaultPrice = $defaultSize ? $defaultSize['final_price'] : 0;
-        $originalPrice = $defaultSize ? $defaultSize['price'] : 0;
-        $hasDiscount = $defaultSize && ($defaultSize['discount_percentage'] > 0 || $defaultSize['discount_amount'] > 0);
-
-        // Get related products from same category
-        $relatedProducts = $productsModel
-            ->select('products.product_id, products.product_name, products.slug')
-            ->where('products.product_category_id', $product['product_category_id'])
-            ->where('products.product_id !=', $product['product_id'])
-            ->limit(4)
-            ->findAll();
-
-        // Get related products images and pricing
-        $relatedProductIds = array_column($relatedProducts, 'product_id');
-        $relatedImages = [];
-        $relatedPricing = [];
-
-        if (!empty($relatedProductIds)) {
-            // Get images
-            $relatedImagesData = $imagesModel->whereIn('product_id', $relatedProductIds)->findAll();
-            foreach ($relatedImagesData as $img) {
-                if (!isset($relatedImages[$img['product_id']])) {
-                    $relatedImages[$img['product_id']] = [];
-                }
-                $relatedImages[$img['product_id']][] = $img['file_path'];
-            }
-
-            // Get pricing from sizes
-            $allSizes = $sizesModel->whereIn('product_id', $relatedProductIds)->findAll();
-            foreach ($allSizes as $size) {
-                if (!isset($relatedPricing[$size['product_id']]) || $size['is_default'] == 1) {
-                    $finalPrice = (float)$size['price'];
-                    if ($size['discount_type'] == 'percentage' && $size['discount_percentage'] > 0) {
-                        $finalPrice = $size['price'] - ($size['price'] * $size['discount_percentage'] / 100);
-                    } elseif ($size['discount_type'] == 'fixed' && $size['discount_amount'] > 0) {
-                        $finalPrice = $size['price'] - $size['discount_amount'];
-                    }
-                    $relatedPricing[$size['product_id']] = [
-                        'original_price' => (float)$size['price'],
-                        'price' => max(0, (float)$finalPrice),
-                        'has_discount' => ($size['discount_percentage'] > 0 || $size['discount_amount'] > 0),
-                        'discount_percentage' => $size['discount_percentage']
-                    ];
-                }
-            }
-        }
-
         $data = [
-            'title' => $product['product_name'] . ' - The Blessed Manifest',
+            'title' => 'The Blessed Manifest',
             'activeMenu' => 'products',
-            'product' => $product,
-            'images' => $images,
-            'sizes' => $sizes,
-            'colors' => $colors,
-            'defaultSize' => $defaultSize,
-            'defaultColor' => $defaultColor,
-            'defaultPrice' => $defaultPrice,
-            'originalPrice' => $originalPrice,
-            'hasDiscount' => $hasDiscount,
-            'relatedProducts' => $relatedProducts,
-            'relatedImages' => $relatedImages,
-            'relatedPricing' => $relatedPricing,
-            'shippingEstimate' => $this->getShippingEstimate(),
-            'shippingCost' => 12.99
+            'product' => $product
         ];
 
         return view('pages/product-details', $data);
     }
 
-    /**
-     * Get product variations (sizes and colors) via AJAX
-     */
-    public function getVariations()
+    public function getData()
     {
-        $productId = $this->request->getGet('product_id');
-        $sizeId = $this->request->getGet('size_id');
-        $colorId = $this->request->getGet('color_id');
+        $productsModel = new ProductsModel();
+
+        $productId = $this->request->getGET('product_id');
+
+        $product = $productsModel
+            ->select('products.*, product_categories.categoryname')
+            ->join('product_categories', 'product_categories.product_category_id = products.product_category_id', 'left')
+            ->where('products.product_id', $productId)
+            ->first();
+
+        return $this->response->setJSON($product);
+    }
+
+    public function otherProducts()
+    {
+        $productsModel = new ProductsModel();
+        $productId = $this->request->getGET('product_id');
         
-        $sizesModel = new SizesModel();
+        if (!$productId) {
+            return $this->response->setJSON(['error' => true, 'message' => 'Product ID required']);
+        }
+        
+        // Get current product's category
+        $currentProduct = $productsModel->find($productId);
+        
+        if (!$currentProduct) {
+            return $this->response->setJSON([]);
+        }
+        
+        // Get products from same category, excluding current product
+        $products = $productsModel
+            ->select('products.*, product_categories.categoryname')
+            ->join('product_categories', 'product_categories.product_category_id = products.product_category_id', 'left')
+            ->join('sizes', 'sizes.product_id = products.product_id AND sizes.is_default = 1', 'left')
+            ->where('products.product_category_id', $currentProduct['product_category_id'])
+            ->where('products.product_id !=', $productId)
+            ->orderBy('RAND()') // Randomize for variety
+            ->limit(6) // Limit to 6 products
+            ->findAll();
+        
+        return $this->response->setJSON($products);
+    }
+
+    public function getProductColorImages()
+    {
         $colorsModel = new ColorsModel();
         
-        $response = [];
+        $productId = $this->request->getGET('product_id');
+        $colorId = $this->request->getGET('color_id');
         
-        // Get sizes
-        $sizes = $sizesModel->where('product_id', $productId)->orderBy('CAST(size AS UNSIGNED)', 'ASC')->findAll();
-        foreach ($sizes as &$size) {
-            $size['final_price'] = (float)$size['price'];
-            if ($size['discount_type'] == 'percentage' && $size['discount_percentage'] > 0) {
-                $size['final_price'] = $size['price'] - ($size['price'] * $size['discount_percentage'] / 100);
-            } elseif ($size['discount_type'] == 'fixed' && $size['discount_amount'] > 0) {
-                $size['final_price'] = $size['price'] - $size['discount_amount'];
-            }
-            $size['final_price'] = max(0, (float)$size['final_price']);
-            $size['price'] = (float)$size['price'];
+        if (!$productId) {
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'Product ID is required'
+            ])->setStatusCode(400);
         }
         
-        // Get colors
-        $colors = $colorsModel->where('product_id', $productId)->orderBy('is_default', 'DESC')->findAll();
-        
-        // Get selected size details
-        $selectedSize = null;
-        if ($sizeId) {
-            $selectedSize = $sizesModel->find($sizeId);
-            if ($selectedSize) {
-                $selectedSize['final_price'] = (float)$selectedSize['price'];
-                if ($selectedSize['discount_type'] == 'percentage' && $selectedSize['discount_percentage'] > 0) {
-                    $selectedSize['final_price'] = $selectedSize['price'] - ($selectedSize['price'] * $selectedSize['discount_percentage'] / 100);
-                } elseif ($selectedSize['discount_type'] == 'fixed' && $selectedSize['discount_amount'] > 0) {
-                    $selectedSize['final_price'] = $selectedSize['price'] - $selectedSize['discount_amount'];
-                }
-                $selectedSize['final_price'] = max(0, (float)$selectedSize['final_price']);
-                $selectedSize['price'] = (float)$selectedSize['price'];
-            }
-        }
-        
-        // Get selected color images
-        $selectedColor = null;
-        $frontImage = null;
-        $backImage = null;
+        $colorsQuery = $colorsModel
+            ->select('colors.*')
+            ->where('colors.product_id', $productId);
         
         if ($colorId) {
-            $selectedColor = $colorsModel->find($colorId);
-            if ($selectedColor) {
-                $frontImage = $selectedColor['front_image'] ? base_url($selectedColor['front_image']) : null;
-                $backImage = $selectedColor['back_image'] ? base_url($selectedColor['back_image']) : null;
-            }
+            $colorsQuery->where('colors.color_id', $colorId);
+        } else {
+            $colorsQuery->where('colors.is_default', 1);
         }
         
-        // If no selected color but colors exist, get default
-        if (!$selectedColor && !empty($colors)) {
-            $defaultColor = $colors[0];
-            $frontImage = $defaultColor['front_image'] ? base_url($defaultColor['front_image']) : null;
-            $backImage = $defaultColor['back_image'] ? base_url($defaultColor['back_image']) : null;
+        $colors = $colorsQuery->findAll();
+        
+        if (empty($colors)) {
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'No images found'
+            ])->setStatusCode(404);
         }
         
-        $response = [
-            'success' => true,
-            'sizes' => $sizes,
-            'colors' => $colors,
-            'selected_size' => $selectedSize,
-            'selected_color' => $selectedColor,
-            'front_image' => $frontImage,
-            'back_image' => $backImage
-        ];
+        // Return single object if only one, or array if multiple
+        return $this->response->setJSON(count($colors) === 1 ? $colors[0] : $colors);
+    }
+
+    public function getProductColors()
+    {
+        $colorsModel = new ColorsModel();
         
-        return $this->response->setJSON($response);
+        $productId = $this->request->getGET('product_id');
+        
+        if (!$productId) {
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'Product ID is required'
+            ])->setStatusCode(400);
+        }
+        
+        $colors = $colorsModel
+            ->select('colors.*')
+            ->where('colors.product_id', $productId)
+            ->findAll();
+            
+        // Return single object if only one, or array if multiple
+        return $this->response->setJSON($colors);
+    }
+
+    public function getProductSizes()
+    {
+        $sizesModel = new SizesModel();
+        
+        $productId = $this->request->getGET('product_id');
+        
+        if (!$productId) {
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'Product ID is required'
+            ])->setStatusCode(400);
+        }
+        
+        $sizes = $sizesModel
+            ->select('sizes.*')
+            ->where('sizes.product_id', $productId)
+            ->orderBy('size', 'asc')
+            ->findAll();
+            
+        // Return single object if only one, or array if multiple
+        return $this->response->setJSON($sizes);
     }
 
     /**
-     * Add to cart AJAX endpoint
+     * Check if user is logged in
      */
-    public function addToCart()
+    public function checkLoginStatus()
     {
-        $productId = $this->request->getPost('product_id');
-        $sizeId = $this->request->getPost('size_id');
-        $colorId = $this->request->getPost('color_id');
-        $quantity = $this->request->getPost('quantity') ?? 1;
+        $isLoggedIn = session()->has('user_user_id') && session()->get('user_usertype') == 'Regular User';
+        
+        return $this->response->setJSON([
+            'logged_in' => $isLoggedIn,
+            'user_id' => $isLoggedIn ? session()->get('user_user_id') : null
+        ]);
+    }
+
+    /**
+     * Get complete product details for accordion
+     */
+    public function getCompleteProductDetails()
+    {
+        $productId = $this->request->getGET('product_id');
+        
+        if (!$productId) {
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'Product ID is required'
+            ])->setStatusCode(400);
+        }
         
         $productsModel = new ProductsModel();
         $sizesModel = new SizesModel();
         $colorsModel = new ColorsModel();
         
-        // Get product details
-        $product = $productsModel->find($productId);
+        // Get product basic info
+        $product = $productsModel
+            ->select('products.*, product_categories.categoryname')
+            ->join('product_categories', 'product_categories.product_category_id = products.product_category_id', 'left')
+            ->where('products.product_id', $productId)
+            ->first();
+        
         if (!$product) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Product not found']);
+            return $this->response->setJSON([
+                'error' => true,
+                'message' => 'Product not found'
+            ])->setStatusCode(404);
         }
         
-        // Get size details
-        $size = $sizesModel->find($sizeId);
-        if (!$size) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Size not found']);
-        }
+        // Get all sizes for this product
+        $sizes = $sizesModel
+            ->where('product_id', $productId)
+            ->orderBy('size', 'asc')
+            ->findAll();
         
-        // Calculate price with discount
-        $price = (float)$size['price'];
-        $discountAmount = 0;
+        // Get all colors for this product
+        $colors = $colorsModel
+            ->where('product_id', $productId)
+            ->findAll();
         
-        if ($size['discount_type'] == 'percentage' && $size['discount_percentage'] > 0) {
-            $discountAmount = $price * $size['discount_percentage'] / 100;
-            $price = $price - $discountAmount;
-        } elseif ($size['discount_type'] == 'fixed' && $size['discount_amount'] > 0) {
-            $discountAmount = $size['discount_amount'];
-            $price = $price - $discountAmount;
-        }
-        $price = max(0, $price);
+        // Get default size and price
+        $defaultSize = $sizesModel
+            ->where('product_id', $productId)
+            ->where('is_default', 1)
+            ->first();
         
-        // Get color details if provided
-        $color = null;
-        $colorHex = null;
-        if ($colorId) {
-            $color = $colorsModel->find($colorId);
-            if ($color) {
-                $colorHex = $color['color_hex'];
-            }
-        }
-        
-        // Build cart item
-        $cartItem = [
-            'product_id' => $productId,
+        // Prepare complete product details
+        $completeDetails = [
+            'product_id' => $product['product_id'],
             'product_name' => $product['product_name'],
             'slug' => $product['slug'],
-            'size_id' => $sizeId,
-            'size' => $size['size'],
-            'unit_of_measure' => $size['unit_of_measure'],
-            'color_id' => $colorId,
-            'color_hex' => $colorHex,
-            'quantity' => (int)$quantity,
-            'price' => round($price, 2),
-            'original_price' => (float)$size['price'],
-            'discount_percentage' => $size['discount_percentage'],
-            'discount_amount' => $discountAmount
+            'categoryname' => $product['categoryname'] ?? 'Uncategorized',
+            'description' => $product['description'] ?? '',
+            'tags' => $product['tags'] ?? '',
+            'is_featured' => $product['is_featured'] ?? 0,
+            
+            // Product Specifications
+            'specifications' => $this->getProductSpecifications($product),
+            
+            // Sizes Information
+            'sizes' => array_map(function($size) {
+                return [
+                    'size' => $size['size'],
+                    'unit_of_measure' => $size['unit_of_measure'],
+                    'price' => $size['price'],
+                    'discount_percentage' => $size['discount_percentage'] ?? 0,
+                    'discount_amount' => $size['discount_amount'] ?? 0,
+                    'is_default' => $size['is_default'],
+                    'final_price' => $this->calculateFinalPrice($size)
+                ];
+            }, $sizes),
+            
+            // Colors Information
+            'colors' => array_map(function($color) {
+                return [
+                    'color_hex' => $color['color_hex'],
+                    'front_image' => $color['front_image'],
+                    'back_image' => $color['back_image'],
+                    'is_default' => $color['is_default']
+                ];
+            }, $colors),
+            
+            // Shipping Information
+            'shipping' => [
+                'processing_time' => '1-2 business days',
+                'standard_delivery' => '5-7 business days',
+                'express_delivery' => '2-3 business days',
+                'free_shipping_threshold' => 50.00,
+                'shipping_cost' => 12.99,
+                'international_shipping' => true
+            ],
+            
+            // Return Policy
+            'returns' => [
+                'return_period' => '30 days',
+                'condition' => 'Unused, original packaging',
+                'refund_method' => 'Original payment method',
+                'restocking_fee' => 0
+            ],
+            
+            // Materials & Care
+            'materials_care' => [
+                'material' => 'High-quality ceramic',
+                'finish' => 'Glossy finish for vibrant colors',
+                'dishwasher_safe' => true,
+                'microwave_safe' => true,
+                'capacity' => '11 oz (325 ml)',
+                'dimensions' => '3.5" height x 3.2" diameter',
+                'weight' => '0.85 lbs'
+            ],
+            
+            // Customization Options
+            'customization' => [
+                'file_types' => ['JPG', 'PNG', 'PDF', 'SVG', 'AI', 'EPS'],
+                'max_file_size' => '20MB',
+                'resolution' => '300 DPI recommended',
+                'min_dimensions' => '1000 x 1000 pixels',
+                'preview_available' => true,
+                'templates_available' => true,
+                'text_customization' => true
+            ],
+            
+            // Bulk Pricing (if applicable)
+            'bulk_pricing' => $this->getBulkPricing($defaultSize['price'] ?? 0),
+            
+            // Related Products Info
+            'related_products_count' => $this->getRelatedProductsCount($product['product_category_id'], $productId)
         ];
         
-        // Initialize cart session if not exists
-        $cart = session()->get('cart') ?? [];
-        
-        // Check if item already exists
-        $itemKey = $productId . '_' . $sizeId . '_' . ($colorId ?? '0');
-        if (isset($cart[$itemKey])) {
-            $cart[$itemKey]['quantity'] += $quantity;
-        } else {
-            $cart[$itemKey] = $cartItem;
-        }
-        
-        session()->set('cart', $cart);
-        
-        // Calculate cart total
-        $cartTotal = 0;
-        $cartCount = 0;
-        foreach ($cart as $item) {
-            $cartTotal += $item['price'] * $item['quantity'];
-            $cartCount += $item['quantity'];
-        }
-        
-        return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Product added to cart successfully!',
-            'cart_count' => $cartCount,
-            'cart_total' => round($cartTotal, 2)
-        ]);
+        return $this->response->setJSON($completeDetails);
     }
-
+    
     /**
-     * Get shipping estimate based on location
+     * Get product specifications
      */
-    private function getShippingEstimate()
+    private function getProductSpecifications($product)
     {
-        $estimates = [
-            'United States' => ['min_days' => 3, 'max_days' => 7],
-            'Canada' => ['min_days' => 5, 'max_days' => 10],
-            'United Kingdom' => ['min_days' => 6, 'max_days' => 12],
-            'Australia' => ['min_days' => 7, 'max_days' => 14]
-        ];
-
-        $defaultCountry = 'United States';
-        $estimate = $estimates[$defaultCountry];
-
+        $specs = [];
+        
+        if ($product['tags']) {
+            $specs['Tags'] = $product['tags'];
+        }
+        
+        $specs['Category'] = $product['categoryname'] ?? 'Uncategorized';
+        $specs['Product ID'] = $product['product_id'];
+        
+        if ($product['is_featured']) {
+            $specs['Featured Product'] = 'Yes';
+        }
+        
+        return $specs;
+    }
+    
+    /**
+     * Calculate final price with discount
+     */
+    private function calculateFinalPrice($size)
+    {
+        $price = $size['price'];
+        
+        if ($size['discount_type'] === 'percentage' && $size['discount_percentage'] > 0) {
+            $price = $price - ($price * $size['discount_percentage'] / 100);
+        } elseif ($size['discount_amount'] > 0) {
+            $price = $price - $size['discount_amount'];
+        }
+        
+        return max(0, $price);
+    }
+    
+    /**
+     * Get bulk pricing tiers
+     */
+    private function getBulkPricing($basePrice)
+    {
         return [
-            'country' => $defaultCountry,
-            'min_days' => $estimate['min_days'],
-            'max_days' => $estimate['max_days']
+            ['quantity' => '2-5', 'discount' => '5%', 'price' => $basePrice * 0.95],
+            ['quantity' => '6-10', 'discount' => '10%', 'price' => $basePrice * 0.90],
+            ['quantity' => '11-20', 'discount' => '15%', 'price' => $basePrice * 0.85],
+            ['quantity' => '20+', 'discount' => '20%', 'price' => $basePrice * 0.80]
         ];
     }
-
+    
     /**
-     * Helper function to get color name from hex
+     * Get count of related products
      */
-    private function getColorNameFromHex($hex)
+    private function getRelatedProductsCount($categoryId, $currentProductId)
     {
-        $colors = [
-            '#FFFFFF' => 'White',
-            '#000000' => 'Black',
-            '#FF0000' => 'Red',
-            '#00FF00' => 'Green',
-            '#0000FF' => 'Blue',
-            '#FFFF00' => 'Yellow',
-            '#FFC0CB' => 'Pink',
-            '#800080' => 'Purple',
-            '#FFA500' => 'Orange',
-            '#808080' => 'Gray',
-            '#A52A2A' => 'Brown',
-            '#FF69B4' => 'Hot Pink',
-            '#00FFFF' => 'Cyan',
-            '#FF4500' => 'Orange Red'
-        ];
-
-        return $colors[strtoupper($hex)] ?? 'Custom';
+        $productsModel = new ProductsModel();
+        
+        return $productsModel
+            ->where('product_category_id', $categoryId)
+            ->where('product_id !=', $currentProductId)
+            ->countAllResults();
     }
 }

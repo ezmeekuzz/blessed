@@ -412,4 +412,4 @@
 
 <?=$this->include('templates/admin/footer');?>
 
-<script src="<?= base_url(); ?>assets/js/admin/add-template.js"></script>
+<script src="<?= base_url(); ?>assets/js/admin/add-grid-template.js"></script>

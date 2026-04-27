@@ -1,443 +1,595 @@
-/**
- * Product Details Page JavaScript
- * Handles color/size selection, quantity updates, add to cart, and more
- */
-
-// State variables - These will be populated from data attributes
-let currentProductId = null;
-let currentSizeId = null;
-let currentColorId = null;
-let currentQuantity = 1;
-let currentPrice = 0;
-let currentOriginalPrice = 0;
-
-// DOM Elements
-let $wishlistBtn;
-let $addToCartBtn;
-let $quantityInput;
-let $displayPrice;
-let $originalPriceDisplay;
-let $discountBadge;
-let $selectedSizeLabel;
-let $selectedColorName;
-
-$(document).ready(function() {
-    // Get product data from data attributes on the container
-    const $productContainer = $('#productDetailsSection');
-    currentProductId = $productContainer.data('product-id');
-    currentPrice = parseFloat($productContainer.data('default-price')) || 0;
-    currentOriginalPrice = parseFloat($productContainer.data('original-price')) || 0;
+// Product Details Module - Optimized & Professional
+(function($) {
+    'use strict';
     
-    // Initialize DOM references
-    $wishlistBtn = $('.wishlist-btn');
-    $addToCartBtn = $('#addToCartBtn');
-    $quantityInput = $('#quantityInput');
-    $displayPrice = $('#displayPrice');
-    $originalPriceDisplay = $('#originalPriceDisplay');
-    $discountBadge = $('#discountBadge');
-    $selectedSizeLabel = $('#selectedSizeLabel');
-    $selectedColorName = $('#selectedColorName');
-    
-    // Get initial size and color IDs from data attributes
-    const $activeSize = $('.size-option .size-badge.active').closest('.size-option');
-    const $activeColor = $('.color-option .color-swatch[style*="border: 2px solid rgb(61, 32, 78)"]').closest('.color-option');
-    
-    currentSizeId = $activeSize.length ? $activeSize.data('size-id') : null;
-    currentColorId = $activeColor.length ? $activeColor.data('color-id') : null;
-    
-    // Initialize event listeners
-    initEventListeners();
-});
-
-function initEventListeners() {
-    // Quantity input change
-    if ($quantityInput.length) {
-        $quantityInput.on('change', function() {
-            let val = parseInt($(this).val());
-            if (isNaN(val) || val < 1) val = 1;
-            if (val > 99) val = 99;
-            currentQuantity = val;
-            $(this).val(val);
-        });
-    }
-    
-    // Keyboard shortcuts
-    $(document).on('keydown', function(e) {
-        // Alt + C to add to cart
-        if (e.altKey && e.key === 'c') {
-            e.preventDefault();
-            addToCart();
-        }
-    });
-}
-
-/**
- * Change main product image
- */
-function changeMainImage(element) {
-    const newImageSrc = $(element).data('image') || $(element).attr('src');
-    if (newImageSrc) {
-        $('#mainProductImage').attr('src', newImageSrc);
+    // Product Details Module
+    const ProductDetails = {
+        // Configuration
+        config: {
+            currentColorId: null,
+            currentSizeId: null,
+            cache: {},
+            debounceTimer: null,
+            isLoggedIn: false,
+            productSlug: null,
+            productId: null
+        },
         
-        // Update active state on thumbnails
-        $('.thumb-img').removeClass('active');
-        $(element).addClass('active');
-    }
-}
-
-/**
- * Select color option
- */
-function selectColor(element) {
-    const $colorOption = $(element).closest('.color-option');
-    const colorId = $colorOption.data('color-id');
-    const colorHex = $colorOption.data('color-hex');
-    const frontImage = $colorOption.data('front-image');
-    
-    // Get color name from hex
-    const colorName = getColorNameFromHex(colorHex);
-    
-    // Update UI
-    $('.color-swatch').css('border', '2px solid #ddd');
-    $colorOption.find('.color-swatch').css('border', '2px solid #3D204E');
-    if ($selectedColorName.length) $selectedColorName.text(colorName);
-    
-    // Update current color ID
-    currentColorId = colorId;
-    
-    // Update main image if front image exists
-    if (frontImage) {
-        $('#mainProductImage').attr('src', frontImage);
+        // DOM Elements Cache
+        elements: {},
         
-        // Also update thumbnail if available
-        if ($('#thumbnailContainer').length && frontImage) {
-            // Check if thumbnail already exists
-            let thumbnailExists = false;
-            $('.thumb-img').each(function() {
-                if ($(this).data('image') === frontImage || $(this).attr('src') === frontImage) {
-                    thumbnailExists = true;
-                }
+        // Initialize module
+        init: function() {
+            this.cacheElements();
+            this.bindEvents();
+            this.checkLoginStatus().then(() => {
+                this.loadProductData();
             });
+        },
+        
+        // Cache DOM elements for performance
+        cacheElements: function() {
+            this.elements = {
+                breadcrumbs: $('#breadCrumbs'),
+                productName: $('#productName'),
+                productDescription: $('#productDescription'),
+                productPrice: $('#productPrice'),
+                productImages: $('#productImages'),
+                colorLists: $('#colorLists'),
+                sizeLists: $('#sizeLists'),
+                otherProducts: $('#otherProducts'),
+                accordionDesc: $('#accordionDescription'),
+                startDesigningBtn: $('#startDesigningBtn')
+            };
+        },
+        
+        // Bind global events
+        bindEvents: function() {
+            // Share button functionality
+            $(document).on('click', '.share-icon', () => this.shareProduct());
             
-            if (!thumbnailExists) {
-                // Add new thumbnail
-                $('#thumbnailContainer').prepend(`
-                    <img src="${frontImage}" alt="Color thumbnail" class="thumb-img" data-image="${frontImage}" onclick="changeMainImage(this)">
-                `);
-                // Make the first thumbnail (the new one) active
-                $('.thumb-img').removeClass('active');
-                $('#thumbnailContainer .thumb-img').first().addClass('active');
+            // Wishlist functionality
+            $(document).on('click', '.wishlist-btn', (e) => this.toggleWishlist($(e.currentTarget)));
+            
+            // Start designing button click handler
+            if (this.elements.startDesigningBtn.length) {
+                this.elements.startDesigningBtn.off('click').on('click', (e) => this.handleStartDesigning(e));
             }
-        }
-    }
-    
-    // Load variations for this color
-    loadVariations();
-}
-
-/**
- * Select size option
- */
-function selectSize(element) {
-    const $sizeOption = $(element).closest('.size-option');
-    const sizeId = $sizeOption.data('size-id');
-    const sizeValue = $sizeOption.data('size-value');
-    const unit = $sizeOption.data('unit') || 'oz';
-    const price = parseFloat($sizeOption.data('price'));
-    const originalPrice = parseFloat($sizeOption.data('original-price'));
-    const hasDiscount = $sizeOption.data('has-discount') === 'true';
-    const discountLabel = $sizeOption.data('discount-label');
-    
-    // Update UI
-    $('.size-badge').removeClass('active border-2').css({
-        'background': 'transparent',
-        'color': '#3D204E'
-    });
-    $sizeOption.find('.size-badge').addClass('active border-2').css({
-        'background': '#3D204E',
-        'color': 'white'
-    });
-    
-    if ($selectedSizeLabel.length) $selectedSizeLabel.text(`${sizeValue} ${unit}`);
-    
-    // Update current size ID and price
-    currentSizeId = sizeId;
-    currentPrice = price;
-    currentOriginalPrice = originalPrice;
-    
-    // Update price display
-    if ($displayPrice.length) $displayPrice.text(`$${price.toFixed(2)}`);
-    
-    if (hasDiscount && originalPrice > price) {
-        if ($originalPriceDisplay.length) {
-            $originalPriceDisplay.show();
-            $originalPriceDisplay.text(`$${originalPrice.toFixed(2)}`);
-        }
-        if ($discountBadge.length) {
-            $discountBadge.show();
-            $discountBadge.text(discountLabel || 'SALE');
-        }
-    } else {
-        if ($originalPriceDisplay.length) $originalPriceDisplay.hide();
-        if ($discountBadge.length) $discountBadge.hide();
-    }
-    
-    // Load variations for this size
-    loadVariations();
-}
-
-/**
- * Load variations (price updates, image updates) based on selected size/color
- * Uses ProductDetailsController::getVariations
- */
-function loadVariations() {
-    if (!currentProductId) return;
-    
-    $.ajax({
-        url: '/product-details/variations',  // ProductDetailsController::getVariations
-        method: 'GET',
-        data: {
-            product_id: currentProductId,
-            size_id: currentSizeId,
-            color_id: currentColorId
         },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                // Update front image if available
-                if (response.front_image) {
-                    $('#mainProductImage').attr('src', response.front_image);
+        
+        // Check if user is logged in via AJAX
+        checkLoginStatus: function() {
+            return this.ajaxRequest('/product-details/checkLoginStatus', {})
+                .then(response => {
+                    this.config.isLoggedIn = response.logged_in;
+                    return response;
+                })
+                .catch(error => {
+                    console.error('Error checking login status:', error);
+                    this.config.isLoggedIn = false;
+                    return { logged_in: false };
+                });
+        },
+        
+        // Handle Start Designing button click
+        handleStartDesigning: function(e) {
+            e.preventDefault();
+            
+            // Get the current product slug
+            const productSlug = this.config.productSlug || this.getProductSlug();
+            const customizeUrl = `/customize-design/${productSlug}`;
+            
+            if (this.config.isLoggedIn) {
+                // User is logged in, redirect to customize page
+                window.location.href = customizeUrl;
+            } else {
+                // User is not logged in, show SweetAlert2 popup with close button
+                Swal.fire({
+                    title: '<span style="color: #3D204E;">Login Required</span>',
+                    html: `
+                        <div style="text-align: left;">
+                            <p style="color: #666; margin-bottom: 20px;">
+                                Please login or create an account to start designing your product.
+                            </p>
+                            <div style="background: #f8f4fa; padding: 15px; border-radius: 12px; margin-top: 10px;">
+                                <p style="color: #3D204E; font-weight: 600; margin-bottom: 10px;">✨ Benefits of creating an account:</p>
+                                <ul style="color: #666; list-style: none; padding-left: 0; margin-bottom: 0;">
+                                    <li style="margin-bottom: 8px;">✓ Save your designs</li>
+                                    <li style="margin-bottom: 8px;">✓ Track orders easily</li>
+                                    <li style="margin-bottom: 8px;">✓ Get exclusive offers</li>
+                                    <li style="margin-bottom: 8px;">✓ Faster checkout process</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'info',
+                    iconColor: '#3D204E',
+                    showCancelButton: true,
+                    showCloseButton: true, // Add close button (X) in top right
+                    confirmButtonColor: '#3D204E',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Login Now',
+                    cancelButtonText: 'Create Account',
+                    backdrop: true,
+                    allowOutsideClick: true, // Allow clicking outside to close
+                    allowEscapeKey: true,    // Allow ESC key to close
+                    customClass: {
+                        popup: 'rounded-4',
+                        title: 'fs-4 fw-bold',
+                        confirmButton: 'px-4 py-2 rounded-pill',
+                        cancelButton: 'px-4 py-2 rounded-pill',
+                        closeButton: 'text-purple' // Style the close button
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // User clicked Login Now
+                        sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                        window.location.href = '/login';
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        // User clicked Create Account
+                        sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                        window.location.href = '/register';
+                    }
+                    // If user clicks close button (X) or clicks outside or presses ESC, just close the modal
+                });
+            }
+        },
+        
+        // Helper method to get product slug
+        getProductSlug: function() {
+            // Get slug from URL
+            const urlParts = window.location.pathname.split('/');
+            const slugFromUrl = urlParts[urlParts.length - 1];
+            
+            // If you have it in the page data
+            if (typeof productSlug !== 'undefined' && productSlug) {
+                return productSlug;
+            }
+            
+            return slugFromUrl;
+        },
+        
+        // Share product
+        shareProduct: function() {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.title,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                this.showNotification('Link copied to clipboard!', 'success');
+            }
+        },
+        
+        // Toggle wishlist
+        toggleWishlist: function($btn) {
+            if (!this.config.isLoggedIn) {
+                this.showLoginPromptForWishlist();
+                return;
+            }
+            
+            $btn.toggleClass('active');
+            const icon = $btn.find('i');
+            icon.toggleClass('bi-heart bi-heart-fill');
+            this.showNotification(icon.hasClass('bi-heart-fill') ? 'Added to wishlist' : 'Removed from wishlist', 'success');
+        },
+        
+        // Show login prompt for wishlist (closeable)
+        showLoginPromptForWishlist: function() {
+            Swal.fire({
+                title: '<span style="color: #3D204E;">Login Required</span>',
+                html: '<p style="color: #666;">Please login to add items to your wishlist.</p>',
+                icon: 'info',
+                iconColor: '#3D204E',
+                showCancelButton: true,
+                showCloseButton: true,
+                confirmButtonColor: '#3D204E',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Login',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: true,
+                allowEscapeKey: true,
+                customClass: {
+                    popup: 'rounded-4',
+                    confirmButton: 'rounded-pill px-4',
+                    cancelButton: 'rounded-pill px-4'
                 }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                    window.location.href = '/login';
+                }
+                // If user closes, just dismiss
+            });
+        },
+        
+        // Load all product data
+        loadProductData: function() {
+            if (!this.config.productId) {
+                this.showNotification('Product ID is missing', 'error');
+                return;
             }
+            
+            this.showSkeletonLoaders();
+            this.getProductDetails();
+            this.getOtherProducts();
         },
-        error: function(xhr, status, error) {
-            console.error('Error loading variations:', error);
-        }
-    });
-}
-
-/**
- * Update quantity
- */
-function updateQuantity(delta) {
-    let newQuantity = currentQuantity + delta;
-    if (newQuantity < 1) newQuantity = 1;
-    if (newQuantity > 99) newQuantity = 99;
-    
-    currentQuantity = newQuantity;
-    if ($quantityInput.length) $quantityInput.val(newQuantity);
-}
-
-/**
- * Add product to cart
- * Uses ProductDetailsController::addToCart
- */
-function addToCart() {
-    if (!currentSizeId) {
-        showToast('Please select a size first!', 'warning');
-        return;
-    }
-    
-    // Show loading state on button
-    const $btn = $addToCartBtn;
-    const originalText = $btn.html();
-    $btn.html('<i class="bi bi-hourglass-split me-2"></i>Adding...').prop('disabled', true);
-    
-    $.ajax({
-        url: '/product-details/add-to-cart',  // ProductDetailsController::addToCart
-        method: 'POST',
-        data: {
-            product_id: currentProductId,
-            size_id: currentSizeId,
-            color_id: currentColorId || null,
-            quantity: currentQuantity
+        
+        // Fetch product details
+        getProductDetails: function() {
+            this.ajaxRequest('/product-details/getData', { product_id: this.config.productId })
+                .then(response => this.renderProductDetails(response))
+                .catch(error => this.handleError(error, 'Failed to load product details'));
         },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                showToast(response.message, 'success');
-                updateCartBadge(response.cart_count);
-                animateCartIcon();
-            } else {
-                showToast(response.message || 'Failed to add to cart', 'error');
-            }
+        
+        // Fetch product images by color
+        getProductImages: function(colorId = null) {
+            const data = { product_id: this.config.productId };
+            if (colorId) data.color_id = colorId;
+            
+            return this.ajaxRequest('/product-details/getProductColorImages', data);
         },
-        error: function(xhr, status, error) {
-            console.error('Add to cart error:', error);
-            showToast('An error occurred. Please try again.', 'error');
+        
+        // Fetch product colors
+        getProductColors: function() {
+            return this.ajaxRequest('/product-details/getProductColors', { product_id: this.config.productId });
         },
-        complete: function() {
-            $btn.html(originalText).prop('disabled', false);
-        }
-    });
-}
-
-/**
- * Start designing/customizing product
- */
-function startDesigning() {
-    // Redirect to customization page with product details
-    window.location.href = `/customize/${currentProductId}?size=${currentSizeId || ''}&color=${currentColorId || ''}`;
-}
-
-/**
- * Toggle product in wishlist
- */
-function toggleWishlist(productId) {
-    const $icon = $wishlistBtn.find('i');
-    
-    $.ajax({
-        url: '/wishlist/toggle',
-        method: 'POST',
-        data: { product_id: productId },
-        dataType: 'json',
-        success: function(response) {
-            if (response.in_wishlist) {
-                $icon.removeClass('bi-heart').addClass('bi-heart-fill');
-                showToast('Added to wishlist!', 'success');
-            } else {
-                $icon.removeClass('bi-heart-fill').addClass('bi-heart');
-                showToast('Removed from wishlist', 'info');
-            }
+        
+        // Fetch product sizes
+        getProductSizes: function() {
+            return this.ajaxRequest('/product-details/getProductSizes', { product_id: this.config.productId });
         },
-        error: function() {
-            showToast('Please login to use wishlist', 'warning');
-        }
-    });
-}
-
-/**
- * Share product
- */
-function shareProduct() {
-    const url = window.location.href;
-    const title = document.title;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: title,
-            url: url
-        }).catch(() => {
-            copyToClipboard(url);
-        });
-    } else {
-        copyToClipboard(url);
-    }
-}
-
-/**
- * Copy to clipboard helper
- */
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Link copied to clipboard!', 'success');
-    }).catch(() => {
-        showToast('Failed to copy link', 'error');
-    });
-}
-
-/**
- * Show toast notification
- */
-function showToast(message, type = 'success') {
-    let toastEl = $('#cartToast');
-    
-    // Check if toast element exists, if not create it
-    if (!toastEl.length) {
-        $('body').append(`
-            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-                <div id="cartToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
-                    <div class="d-flex">
-                        <div class="toast-body"></div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        
+        // Fetch other products
+        getOtherProducts: function() {
+            this.showOtherProductsSkeleton();
+            this.ajaxRequest('/product-details/otherProducts', { product_id: this.config.productId })
+                .then(response => this.renderOtherProducts(response))
+                .catch(() => this.renderNoOtherProducts());
+        },
+        
+        // Generic AJAX request with promise
+        ajaxRequest: function(url, data) {
+            return $.ajax({
+                url: url,
+                method: 'GET',
+                data: data,
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                timeout: 10000 // 10 second timeout
+            });
+        },
+        
+        // Render product details
+        renderProductDetails: function(response) {
+            if (!response) return;
+            
+            // Store product slug for later use
+            this.config.productSlug = response.slug;
+            
+            this.renderBreadcrumbs(response);
+            this.renderProductName(response);
+            this.renderProductDescription(response);
+            
+            // Load dependent data in parallel
+            Promise.all([
+                this.getProductImages(),
+                this.getProductColors(),
+                this.getProductSizes()
+            ]).then(([images, colors, sizes]) => {
+                this.renderProductImages(images);
+                this.renderColors(colors);
+                this.renderSizes(sizes);
+            }).catch(error => console.error('Error loading product data:', error));
+        },
+        
+        // Render breadcrumbs
+        renderBreadcrumbs: function(data) {
+            const html = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb bg-transparent p-0 mb-0 fs-5">
+                            <li class="breadcrumb-item"><a href="/products">Products</a></li>
+                            <li class="breadcrumb-item active">${this.escapeHtml(data.categoryname || 'Category')}</li>
+                            <li class="breadcrumb-item active">${this.escapeHtml(data.product_name || 'Product')}</li>
+                        </ol>
+                    </nav>
+                    <div class="share-icon d-flex align-items-center gap-1" style="cursor: pointer;">
+                        <i class="bi bi-share"></i> <span class="fs-6 fw-light">Share</span>
                     </div>
                 </div>
-            </div>
-        `);
-        toastEl = $('#cartToast');
-    }
-    
-    // Update toast styling based on type
-    toastEl.removeClass('bg-success bg-danger bg-warning bg-info');
-    if (type === 'success') toastEl.addClass('bg-success');
-    else if (type === 'error') toastEl.addClass('bg-danger');
-    else if (type === 'warning') toastEl.addClass('bg-warning');
-    else toastEl.addClass('bg-info');
-    
-    toastEl.find('.toast-body').html(`<i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-triangle-fill' : 'info-circle-fill'} me-2"></i>${escapeHtml(message)}`);
-    
-    const toast = new bootstrap.Toast(toastEl[0], { delay: 3000 });
-    toast.show();
-}
-
-/**
- * Update cart badge in header
- */
-function updateCartBadge(count) {
-    const $cartBadge = $('.cart-badge, #cartCount');
-    if ($cartBadge.length) {
-        $cartBadge.text(count);
-        if (count > 0) {
-            $cartBadge.show();
-        } else {
-            $cartBadge.hide();
+            `;
+            this.elements.breadcrumbs.html(html);
+        },
+        
+        // Render product name
+        renderProductName: function(data) {
+            this.elements.productName.text(this.escapeHtml(data.product_name || 'Product Name'));
+        },
+        
+        // Render product description
+        renderProductDescription: function(data) {
+            const description = this.escapeHtml(data.description || 'Product Description');
+            this.elements.productDescription.html(description);
+            this.elements.accordionDesc.html(description);
+        },
+        
+        // Render product images
+        renderProductImages: function(response) {
+            if (!response || response.error) {
+                this.elements.productImages.html('<div class="alert alert-warning">No images available</div>');
+                return;
+            }
+            
+            const imageData = Array.isArray(response) ? response[0] : response;
+            const frontImage = imageData.front_image ? `/${imageData.front_image}` : '/default-image.jpg';
+            const backImage = imageData.back_image ? `/${imageData.back_image}` : null;
+            
+            const html = `
+                <div class="product-img-large position-relative">
+                    <img src="${frontImage}" alt="Product Image" class="img-square w-100" style="aspect-ratio: 1/1; object-fit: cover; border-radius: 28px;" onerror="this.src='/default-image.jpg'">
+                    <button class="wishlist-btn btn position-absolute top-0 end-0 m-3 p-2 rounded-circle bg-white border-0 shadow-sm" style="width: 45px; height: 45px;">
+                        <i class="bi bi-heart fs-5" style="color: #3D204E;"></i>
+                    </button>
+                </div>
+                <div class="d-flex gap-3 mt-3">
+                    <img src="${frontImage}" alt="Front" class="thumb-img active" onerror="this.src='/default-thumb.jpg'" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px; cursor: pointer;">
+                    ${backImage ? `<img src="${backImage}" alt="Back" class="thumb-img" onerror="this.src='/default-thumb.jpg'" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px; cursor: pointer;">` : ''}
+                </div>
+            `;
+            
+            this.elements.productImages.html(html);
+            this.initThumbnailClick();
+        },
+        
+        // Initialize thumbnail click handler
+        initThumbnailClick: function() {
+            $('.thumb-img').off('click').on('click', function() {
+                $('.thumb-img').removeClass('active');
+                $(this).addClass('active');
+                $('.product-img-large img').attr('src', $(this).attr('src'));
+            });
+        },
+        
+        // Render color options
+        renderColors: function(colors) {
+            if (!colors || colors.error || colors.length === 0) {
+                this.elements.colorLists.html('<p class="text-muted">No color variations available</p>');
+                return;
+            }
+            
+            let html = '<div class="d-flex gap-2 flex-wrap">';
+            colors.forEach(color => {
+                const isDefault = color.is_default == 1;
+                if (isDefault) this.config.currentColorId = color.color_id;
+                
+                html += `
+                    <div class="color-option ${isDefault ? 'active' : ''}" 
+                         data-color-id="${color.color_id}"
+                         data-color-hex="${color.color_hex || '#ccc'}"
+                         style="width: 40px; height: 40px; background-color: ${color.color_hex || '#ccc'}; border-radius: 50%; cursor: pointer; border: 2px solid ${isDefault ? '#3D204E' : 'transparent'}; transition: all 0.2s;">
+                        <span class="visually-hidden">${this.escapeHtml(color.color_name || 'Color')}</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            this.elements.colorLists.html(html);
+            this.initColorClick();
+        },
+        
+        // Initialize color click handler
+        initColorClick: function() {
+            $('.color-option').off('click').on('click', async (e) => {
+                const $target = $(e.currentTarget);
+                const colorId = $target.data('color-id');
+                
+                $('.color-option').css('border', '2px solid transparent');
+                $target.css('border', '2px solid #3D204E');
+                
+                if (this.config.currentColorId === colorId) return;
+                this.config.currentColorId = colorId;
+                
+                // Show loading state
+                this.elements.productImages.html('<div class="skeleton-image" style="width: 100%; height: 400px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 28px;"></div>');
+                
+                const images = await this.getProductImages(colorId);
+                this.renderProductImages(images);
+            });
+        },
+        
+        // Render size options
+        renderSizes: function(sizes) {
+            if (!sizes || sizes.error) {
+                this.elements.sizeLists.html('<p class="text-danger">Failed to load sizes</p>');
+                return;
+            }
+            
+            if (!sizes.length) {
+                this.elements.sizeLists.html('<p class="text-muted">No size options available</p>');
+                return;
+            }
+            
+            let html = '<div class="d-flex gap-2 flex-wrap">';
+            let defaultPrice = "0.00";
+            
+            sizes.forEach(size => {
+                const isDefault = size.is_default == 1;
+                if (isDefault) {
+                    defaultPrice = size.price || "0.00";
+                    this.config.currentSizeId = size.size_id;
+                }
+                
+                html += `
+                    <span class="size-badge ${isDefault ? 'active' : ''}" 
+                          data-size-id="${size.size_id}"
+                          data-price="${size.price || 0}"
+                          style="cursor: pointer; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; transition: all 0.2s; ${isDefault ? 'background-color: #3D204E; color: #fff; border-color: #3D204E;' : 'background-color: #fff; color: #333;'}">
+                        ${this.escapeHtml(size.size)} ${this.escapeHtml(size.unit_of_measure)}
+                    </span>
+                `;
+            });
+            html += '</div>';
+            
+            this.elements.sizeLists.html(html);
+            this.elements.productPrice.text('$' + parseFloat(defaultPrice).toFixed(2));
+            this.initSizeClick();
+        },
+        
+        // Initialize size click handler
+        initSizeClick: function() {
+            $('.size-badge').off('click').on('click', (e) => {
+                const $target = $(e.currentTarget);
+                const price = $target.data('price');
+                
+                $('.size-badge').removeClass('active').css({
+                    'background-color': '#fff',
+                    'color': '#333',
+                    'border-color': '#ddd'
+                });
+                
+                $target.addClass('active').css({
+                    'background-color': '#3D204E',
+                    'color': '#fff',
+                    'border-color': '#3D204E'
+                });
+                
+                if (price && price > 0) {
+                    this.elements.productPrice.text('$' + parseFloat(price).toFixed(2));
+                }
+            });
+        },
+        
+        // Render other products
+        renderOtherProducts: function(products) {
+            if (!products || !products.length) {
+                this.renderNoOtherProducts();
+                return;
+            }
+            
+            const html = products.slice(0, 6).map(product => `
+                <div class="col-6 col-md-4">
+                    <div class="card h-100 border-0 p-2 p-sm-3 hover-effect" style="background: #f7f2eb; border-radius: 24px; cursor: pointer;" onclick="window.location.href='/product/${product.slug || product.product_id}'">
+                        <div class="position-relative" style="aspect-ratio: 1/1;">
+                            <img src="/${product.front_image || 'default-product.jpg'}" class="img-fluid rounded-4 w-100 h-100 object-fit-cover" alt="${this.escapeHtml(product.product_name)}" loading="lazy" onerror="this.src='/default-product.jpg'">
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mt-3 gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: #3D204E;">${this.escapeHtml(product.product_name)}</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-bold fs-5" style="color: #3D204E;">$${parseFloat(product.price || 0).toFixed(2)}</span>
+                                    ${product.compare_price ? `<span class="text-decoration-line-through text-secondary small">$${parseFloat(product.compare_price).toFixed(2)}</span>` : ''}
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-purple rounded-pill px-3 px-sm-4 py-2" style="border-color: #3D204E; color: #3D204E;">View Details</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            this.elements.otherProducts.html(html);
+        },
+        
+        // Show skeleton loaders
+        showSkeletonLoaders: function() {
+            const skeletons = {
+                breadcrumbs: '<div class="skeleton-text" style="width: 200px; height: 24px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px;"></div>',
+                productName: '<div class="skeleton-text" style="width: 60%; height: 48px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px;"></div>',
+                productDescription: '<div class="skeleton-text" style="width: 100%; height: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px;"></div>',
+                productImages: '<div class="skeleton-image" style="width: 100%; height: 400px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 28px;"></div><div class="d-flex gap-3 mt-3"><div class="skeleton-thumb" style="width: 80px; height: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px;"></div><div class="skeleton-thumb" style="width: 80px; height: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px;"></div></div>',
+                colorLists: '<div class="d-flex gap-2"><div class="skeleton-color" style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%;"></div><div class="skeleton-color" style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%;"></div><div class="skeleton-color" style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%;"></div></div>',
+                sizeLists: '<div class="d-flex gap-2"><div class="skeleton-size" style="width: 80px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 5px;"></div><div class="skeleton-size" style="width: 80px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 5px;"></div></div>',
+                productPrice: '<div class="skeleton-text" style="width: 120px; height: 48px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px;"></div>'
+            };
+            
+            Object.keys(skeletons).forEach(key => {
+                if (this.elements[key] && this.elements[key].length) {
+                    this.elements[key].html(skeletons[key]);
+                }
+            });
+        },
+        
+        // Show other products skeleton
+        showOtherProductsSkeleton: function() {
+            const skeletons = Array(3).fill().map(() => `
+                <div class="col-6 col-md-4">
+                    <div class="card h-100 border-0 p-2 p-sm-3" style="background: #f7f2eb; border-radius: 24px;">
+                        <div class="position-relative" style="aspect-ratio: 1/1;">
+                            <div class="skeleton-image w-100 h-100 rounded-4" style="background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite;"></div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="skeleton-text" style="width: 70%; height: 20px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; margin-bottom: 10px;"></div>
+                            <div class="skeleton-text" style="width: 40%; height: 15px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (this.elements.otherProducts.length) {
+                this.elements.otherProducts.html(skeletons);
+            }
+        },
+        
+        // Render no other products message
+        renderNoOtherProducts: function() {
+            const html = `
+                <div class="col-12">
+                    <div class="text-center py-5" style="background: #f8f4fa; border-radius: 24px;">
+                        <div class="mb-3">
+                            <i class="bi bi-box-seam fs-1" style="color: #3D204E;"></i>
+                        </div>
+                        <h5 class="mb-2" style="color: #3D204E;">No other products available</h5>
+                        <p class="text-muted">Check back later for more products in this category.</p>
+                        <a href="/products" class="btn btn-outline-purple rounded-pill px-4 py-2" style="border-color: #3D204E; color: #3D204E;">Browse All Products</a>
+                    </div>
+                </div>
+            `;
+            this.elements.otherProducts.html(html);
+        },
+        
+        // Handle errors
+        handleError: function(error, defaultMessage) {
+            console.error('ProductDetails Error:', error);
+            this.showNotification(defaultMessage, 'error');
+        },
+        
+        // Show notification
+        showNotification: function(message, type = 'error') {
+            const $notification = $('#notification-area');
+            if ($notification.length) {
+                $notification.removeClass('alert-success alert-danger')
+                    .addClass(`alert alert-${type === 'error' ? 'danger' : 'success'}`)
+                    .text(message)
+                    .fadeIn();
+                setTimeout(() => $notification.fadeOut(), 3000);
+            } else {
+                // Fallback to toast or console
+                if (type === 'error') {
+                    console.error(message);
+                } else {
+                    console.log(message);
+                }
+            }
+        },
+        
+        // Escape HTML for XSS protection
+        escapeHtml: function(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
-    }
-}
-
-/**
- * Animate cart icon on add
- */
-function animateCartIcon() {
-    const $cartIcon = $('.cart-icon, .bi-cart, .fa-cart-shopping');
-    $cartIcon.addClass('animate__animated animate__rubberBand');
-    setTimeout(() => {
-        $cartIcon.removeClass('animate__animated animate__rubberBand');
-    }, 1000);
-}
-
-/**
- * Get color name from hex code
- */
-function getColorNameFromHex(hex) {
-    const colors = {
-        '#FFFFFF': 'White',
-        '#000000': 'Black',
-        '#FF0000': 'Red',
-        '#00FF00': 'Green',
-        '#0000FF': 'Blue',
-        '#FFFF00': 'Yellow',
-        '#FFC0CB': 'Pink',
-        '#800080': 'Purple',
-        '#FFA500': 'Orange',
-        '#808080': 'Gray',
-        '#A52A2A': 'Brown',
-        '#FF69B4': 'Hot Pink',
-        '#00FFFF': 'Cyan',
-        '#FF4500': 'Orange Red'
     };
-    return colors[hex.toUpperCase()] || 'Custom';
-}
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-// Export functions for global access
-window.changeMainImage = changeMainImage;
-window.selectColor = selectColor;
-window.selectSize = selectSize;
-window.updateQuantity = updateQuantity;
-window.addToCart = addToCart;
-window.startDesigning = startDesigning;
-window.toggleWishlist = toggleWishlist;
-window.shareProduct = shareProduct;
+    
+    // Initialize when document ready with productId
+    $(document).ready(function() {
+        if (typeof productId !== 'undefined' && productId) {
+            ProductDetails.config.productId = productId;
+            ProductDetails.init();
+        } else {
+            console.error('Product ID not defined');
+        }
+    });
+    
+})(jQuery);

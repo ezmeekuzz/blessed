@@ -215,4 +215,4 @@
 </div>
 
 <?=$this->include('templates/admin/footer');?>
-<script src="<?=base_url();?>assets/js/admin/templates-masterlist.js"></script>
+<script src="<?=base_url();?>assets/js/admin/grid-templates-masterlist.js"></script>

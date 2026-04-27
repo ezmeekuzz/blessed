@@ -5,7 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\Admin\SessionController;
 use App\Models\GridTemplatesModel;
 
-class EditTemplateController extends SessionController
+class EditGridTemplateController extends SessionController
 {
     public function index($id = null)
     {
@@ -23,11 +23,11 @@ class EditTemplateController extends SessionController
         
         $data = [
             'title' => 'The Blessed Manifest | Edit Grid Template',
-            'activeMenu' => 'templates',
+            'activeMenu' => 'gridtemplates',
             'template' => $template
         ];
         
-        return view('pages/admin/edit-template', $data);
+        return view('pages/admin/edit-grid-template', $data);
     }
     
     public function update($id = null)
@@ -99,7 +99,7 @@ class EditTemplateController extends SessionController
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Grid template updated successfully!',
-                'redirect' => base_url('admin/templates-masterlist')
+                'redirect' => base_url('admin/grid-templates-masterlist')
             ]);
         }
         

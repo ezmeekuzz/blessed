@@ -5,7 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\Admin\SessionController;
 use App\Models\GridTemplatesModel;
 
-class AddTemplateController extends SessionController
+class AddGridTemplateController extends SessionController
 {
     public function index()
     {
@@ -16,10 +16,10 @@ class AddTemplateController extends SessionController
         
         $data = [
             'title' => 'The Blessed Manifest | Add Grid Template',
-            'activeMenu' => 'addtemplate'
+            'activeMenu' => 'addgridtemplate'
         ];
         
-        return view('pages/admin/add-template', $data);
+        return view('pages/admin/add-grid-template', $data);
     }
     
     public function insert()

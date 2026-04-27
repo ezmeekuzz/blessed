@@ -435,4 +435,4 @@
 
 <?=$this->include('templates/admin/footer');?>
 
-<script src="<?= base_url(); ?>assets/js/admin/edit-template.js"></script>
+<script src="<?= base_url(); ?>assets/js/admin/edit-grid-template.js"></script>

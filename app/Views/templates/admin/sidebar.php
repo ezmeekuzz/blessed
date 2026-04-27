@@ -75,17 +75,23 @@
             </li>
 
             <!-- Templates Management (like Canva) -->
-            <li <?php if(in_array($activeMenu, ['templates', 'addtemplate', 'templatecategories'])) echo 'class="active"'; ?>>
+            <li <?php if(in_array($activeMenu, ['gridtemplates', 'addgridtemplate', 'layouttemplates', 'addlayouttemplate'])) echo 'class="active"'; ?>>
                 <a class="has-arrow" href="javascript:void(0)">
                     <i class="nav-icon fas fa-palette"></i>
                     <span class="nav-title">Templates</span>
                 </a>
                 <ul>
-                    <li <?php if($activeMenu == 'addtemplate') echo 'class="active"'; ?>>
-                        <a href='/admin/add-template'>Add Template</a>
+                    <li <?php if($activeMenu == 'addgridtemplate') echo 'class="active"'; ?>>
+                        <a href='/admin/add-grid-template'>Add Grid Template</a>
                     </li>
-                    <li <?php if($activeMenu == 'templates') echo 'class="active"'; ?>>
-                        <a href='/admin/templates-masterlist'>Templates Masterlist</a>
+                    <li <?php if($activeMenu == 'gridtemplates') echo 'class="active"'; ?>>
+                        <a href='/admin/grid-templates-masterlist'>Grid Templates Masterlist</a>
+                    </li>
+                    <li <?php if($activeMenu == 'addlayouttemplate') echo 'class="active"'; ?>>
+                        <a href='/admin/add-layout-template'>Add Layout Template</a>
+                    </li>
+                    <li <?php if($activeMenu == 'layouttemplates') echo 'class="active"'; ?>>
+                        <a href='/admin/layout-templates-masterlist'>Layout Templates Masterlist</a>
                     </li>
                 </ul>
             </li>
